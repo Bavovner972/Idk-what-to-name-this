@@ -44,16 +44,21 @@ def utf(s):
     return struct.pack('>H', len(b)) + b
 
 
+P = {"lastWidth": 200, "lastHeight": 200, "storageCapacity": 4000, "spawnPosition": 12345}
 sectors = {
-    "serpulo-s-15-info": {"waves": False, "wave": 12, "winWave": 10, "production": {"copper": {"mean": 5.0}, "lead": {"mean": 2.5}}, "items": {"copper": 4000, "lead": 1200}, "bestCoreType": "core-foundation", "storageCapacity": 9000, "wasCaptured": True, "lastPresetName": "groundZero"},
-    "serpulo-s-23-info": {"waves": False, "wave": 40, "production": {"silicon": {"mean": 30.0}, "plastanium": {"mean": 10.0}}, "wasCaptured": True},
-    "serpulo-s-86-info": {"wave": 7, "winWave": 15},
-    "serpulo-s-45-info": {"waves": False, "wave": 31, "production": {"titanium": {"mean": 12.0}}, "wasCaptured": True, "resources": ["copper", "titanium", "sand"]},
-    "serpulo-s-112-info": {"wave": 4, "attack": True},
+    "serpulo-s-15-info": {**P, "waves": False, "wave": 12, "winWave": 10, "production": {"copper": {"mean": 5.0}, "lead": {"mean": 2.5}}, "export": {"copper": {"mean": 2.0}}, "items": {"copper": 4000, "lead": 1200, "graphite": 300, "sand": 50}, "bestCoreType": "core-foundation", "storageCapacity": 9000, "wasCaptured": True, "lastPresetName": "groundZero"},
+    "serpulo-s-23-info": {**P, "waves": False, "wave": 40, "production": {"silicon": {"mean": 30.0}, "plastanium": {"mean": 10.0}}, "export": {"silicon": {"mean": 10.0}, "copper": {"mean": 3.0}}, "wasCaptured": True},
+    "serpulo-s-86-info": {**P, "wave": 7, "winWave": 15},
+    "serpulo-s-45-info": {**P, "waves": False, "wave": 31, "production": {"titanium": {"mean": 12.0}}, "wasCaptured": True, "resources": ["copper", "titanium", "sand"]},
+    "serpulo-s-112-info": {**P, "wave": 4, "attack": True},
     "serpulo-s-200-info": {"hasCore": False, "wasCaptured": True, "wave": 22, "name": "My Outpost"},
     "serpulo-s-7-info": {"hasCore": False},
-    "erekir-s-10-info": {"waves": False, "wave": 3, "production": {"beryllium": {"mean": 4.0}}},
+    # Only-viewed sectors: info exists with all defaults (waves=true, hasCore=true) but never played -> must be Unclaimed
+    "serpulo-s-60-info": {"shown": True},
+    "serpulo-s-101-info": {"resources": ["copper", "sand"]},
+    "erekir-s-10-info": {**P, "waves": False, "wave": 3, "production": {"beryllium": {"mean": 4.0}}},
 }
+SAVES = ["serpulo-15", "serpulo-23", "serpulo-86", "serpulo-45", "serpulo-112", "erekir-10"]
 
 vals = [("locale", 4, utf("default")), ("musicvol", 1, struct.pack('>i', 80)), ("fpscap", 3, struct.pack('>f', 60.0))]
 for k, info in sectors.items():
@@ -70,5 +75,6 @@ if compress:
 open('/app/tests/settings.bin', 'wb').write(data)
 with zipfile.ZipFile('/app/tests/export.zip', 'w') as z:
     z.writestr('settings.bin', data)
-    z.writestr('saves/sector-serpulo-15.msav', b'dummy')
+    for s in SAVES:
+        z.writestr(f'saves/sector-{s}.msav', b'dummy')
 print('ok', len(data), 'compressed' if compress else 'raw')

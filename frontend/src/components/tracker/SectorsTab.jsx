@@ -47,7 +47,9 @@ export default function SectorsTab({ sectors, onOpen }) {
       return (
         s.name.toLowerCase().includes(term) ||
         String(s.sector_id) === term.replace("#", "") ||
-        (s.production_text || "").toLowerCase().includes(term)
+        (s.production_text || "").toLowerCase().includes(term) ||
+        (s.export_text || "").toLowerCase().includes(term) ||
+        Object.keys(s.items || {}).some((k) => k.includes(term))
       );
     });
   }, [sectors, q, status, type]);

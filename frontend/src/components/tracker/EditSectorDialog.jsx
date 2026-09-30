@@ -22,6 +22,7 @@ export default function EditSectorDialog({ sector, onClose, onSave, onDelete }) 
         wave: sector.wave ?? 0,
         output: sector.output ?? 0,
         production_text: sector.production_text || "",
+        export_text: sector.export_text || "",
       });
       setConfirmDel(false);
     }
@@ -36,10 +37,10 @@ export default function EditSectorDialog({ sector, onClose, onSave, onDelete }) 
       name: form.name.trim() || sector.name,
       status: form.status,
       difficulty: form.difficulty,
-      power: Number(form.power) || 0,
       wave: parseInt(form.wave, 10) || 0,
       output: Number(form.output) || 0,
       production_text: form.production_text,
+      export_text: form.export_text,
     });
   };
 
@@ -82,19 +83,17 @@ export default function EditSectorDialog({ sector, onClose, onSave, onDelete }) 
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-[13px]">Power</Label>
-              <Input data-testid="edit-power" type="number" value={form.power} onChange={(e) => set("power")(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[13px]">Wave</Label>
-              <Input data-testid="edit-wave" type="number" value={form.wave} onChange={(e) => set("wave")(e.target.value)} />
-            </div>
+          <div className="space-y-1.5">
+            <Label className="text-[13px]">Wave</Label>
+            <Input data-testid="edit-wave" type="number" value={form.wave} onChange={(e) => set("wave")(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-[13px]">Output (items/min)</Label>
             <Input data-testid="edit-output" type="number" value={form.output} onChange={(e) => set("output")(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[13px]">Exports</Label>
+            <Input data-testid="edit-exports" value={form.export_text} onChange={(e) => set("export_text")(e.target.value)} placeholder="e.g. silicon 600.0/min" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-[13px]">Production</Label>

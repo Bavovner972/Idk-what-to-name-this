@@ -46,6 +46,10 @@ class SectorIn(BaseModel):
     output: float = 0
     production: List[ProductionEntry] = []
     production_text: str = ""
+    exports: List[ProductionEntry] = []
+    export_total: float = 0
+    export_text: str = ""
+    has_save: Optional[bool] = None
     resources: List[str] = []
     items: Dict[str, float] = {}
     storage_capacity: int = 0
@@ -74,6 +78,8 @@ class SectorUpdate(BaseModel):
     wave: Optional[int] = None
     output: Optional[float] = None
     production_text: Optional[str] = None
+    export_text: Optional[str] = None
+    export_total: Optional[float] = None
 
 
 @api_router.get("/")

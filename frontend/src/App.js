@@ -14,8 +14,16 @@ import { fetchSectors, fetchPlanets, importSectors, updateSector, deleteSector }
 import { loadSettingsFromFile, extractSectors } from "./lib/mindustryParser";
 import { DIFF_RANK } from "./lib/presets";
 
+const STATUS_RANK = { under_attack: 0, captured: 1, unclaimed: 2, lost: 3 };
+
+// Status first (under attack -> captured -> unclaimed -> lost), then threat (low -> eradication, unknown last),
+// then campaign order for named sectors / id for numbered ones.
 const sortSectors = (list) =>
   [...list].sort((a, b) => {
+    const s = (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9);
+    if (s) return s;
+    const d = (DIFF_RANK[a.difficulty] ?? 9) - (DIFF_RANK[b.difficulty] ?? 9);
+    if (d) return d;
     if (a.numbered !== b.numbered) return a.numbered ? 1 : -1;
     if (!a.numbered) return (a.order ?? 0) - (b.order ?? 0);
     return a.sector_id - b.sector_id;
@@ -57,8 +65,8 @@ function App() {
     setImporting(true);
     const t = toast.loading(`Reading ${file.name}...`);
     try {
-      const values = await loadSettingsFromFile(file);
-      const { planets: found, errors } = extractSectors(values);
+      const { values, saves } = await loadSettingsFromFile(file);
+      const { planets: found, errors, skipped } = extractSectors(values, saves);
       const names = Object.keys(found);
       if (!names.length) throw new Error("No campaign sector data found in this file");
       const summary = [];
@@ -67,7 +75,14 @@ function App() {
         const numbered = found[p].filter((s) => s.numbered).length;
         summary.push(`${p}: ${res.total} sectors (${numbered} numbered)`);
       }
-      toast.success("Save imported", { id: t, description: summary.join(" | ") });
+      toast.success("Save imported", {
+        id: t,
+        description:
+          summary.join(" | ") +
+          (skipped.length ? ` — ignored ${skipped.length} leftover pre-v8 sector entr${skipped.length === 1 ? "y" : "ies"}` : "") +
+          (saves ? "" : " — tip: import the full .zip for the most accurate sector status"),
+      });
+      if (skipped.length) console.info("Ignored leftover sector data", skipped);
       if (errors.length) console.warn("Sector parse warnings", errors);
       const next = found[planet] ? planet : names.includes("serpulo") ? "serpulo" : names[0];
       if (next === planet) load(planet);
@@ -112,6 +127,14 @@ function App() {
       output: Math.round(sectors.reduce((a, s) => a + (s.output || 0), 0)),
       maxWave: sectors.reduce((m, s) => Math.max(m, s.wave || 0), 0),
       numbered: sectors.filter((s) => s.numbered).length,
+      exportTotal: Math.round(sectors.reduce((a, s) => a + (s.export_total || 0), 0)),
+      exportsByItem: (() => {
+        const acc = {};
+        sectors.forEach((s) => (s.exports || []).forEach((e) => (acc[e.item] = (acc[e.item] || 0) + e.rate)));
+        return Object.entries(acc)
+          .map(([item, rate]) => ({ item, rate: Math.round(rate) }))
+          .sort((a, b) => b.rate - a.rate);
+      })(),
     };
   }, [sectors]);
 

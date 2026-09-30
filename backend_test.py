@@ -624,6 +624,157 @@ def test_delete_sectors_by_planet():
     except Exception as e:
         results.add_fail("DELETE /api/sectors?planet", f"Exception: {str(e)}")
 
+def test_new_fields_import_and_get():
+    """Test POST /api/sectors/import with new fields (exports, export_total, export_text, has_save, items, storage_capacity)"""
+    print("\n" + "="*80)
+    print("TEST: New Fields - Import and GET")
+    print("="*80)
+    
+    # Clean up first
+    cleanup_test_planet()
+    
+    payload = {
+        "planet": TEST_PLANET,
+        "replace": True,
+        "sectors": [
+            {
+                "sector_id": 500,
+                "name": "Silicon Export Base",
+                "numbered": True,
+                "status": "captured",
+                "difficulty": "Medium",
+                "wave": 15,
+                "exports": [{"item": "silicon", "rate": 600}],
+                "export_total": 600,
+                "export_text": "silicon 600.0/min",
+                "has_save": True,
+                "items": {"copper": 4000},
+                "storage_capacity": 9000
+            },
+            {
+                "sector_id": 501,
+                "name": "Sector Without New Fields",
+                "numbered": True,
+                "status": "captured",
+                "difficulty": "Low",
+                "wave": 5
+            }
+        ]
+    }
+    
+    try:
+        # Import sectors
+        response = requests.post(f"{BASE_URL}/sectors/import", json=payload)
+        if response.status_code != 200:
+            results.add_fail("New Fields - Import", f"Import failed with status {response.status_code}: {response.text}")
+            return
+        
+        # Get sectors back
+        sectors_response = requests.get(f"{BASE_URL}/sectors", params={"planet": TEST_PLANET})
+        if sectors_response.status_code != 200:
+            results.add_fail("New Fields - GET", f"GET failed with status {sectors_response.status_code}")
+            return
+        
+        sectors = sectors_response.json()
+        
+        # Find sector 500 (with new fields)
+        sector_500 = next((s for s in sectors if s["sector_id"] == 500), None)
+        if not sector_500:
+            results.add_fail("New Fields - Sector 500", "Sector 500 not found")
+            return
+        
+        # Verify all new fields are intact
+        errors = []
+        if sector_500.get("exports") != [{"item": "silicon", "rate": 600}]:
+            errors.append(f"exports mismatch: {sector_500.get('exports')}")
+        if sector_500.get("export_total") != 600:
+            errors.append(f"export_total mismatch: {sector_500.get('export_total')}")
+        if sector_500.get("export_text") != "silicon 600.0/min":
+            errors.append(f"export_text mismatch: {sector_500.get('export_text')}")
+        if sector_500.get("has_save") != True:
+            errors.append(f"has_save mismatch: {sector_500.get('has_save')}")
+        if sector_500.get("items") != {"copper": 4000}:
+            errors.append(f"items mismatch: {sector_500.get('items')}")
+        if sector_500.get("storage_capacity") != 9000:
+            errors.append(f"storage_capacity mismatch: {sector_500.get('storage_capacity')}")
+        
+        if errors:
+            results.add_fail("New Fields - Sector 500 Verification", "; ".join(errors))
+        else:
+            results.add_pass("New Fields - Sector 500", "All new fields intact: exports, export_total, export_text, has_save, items, storage_capacity")
+        
+        # Find sector 501 (without new fields - should have defaults)
+        sector_501 = next((s for s in sectors if s["sector_id"] == 501), None)
+        if not sector_501:
+            results.add_fail("New Fields - Sector 501", "Sector 501 not found")
+            return
+        
+        # Verify defaults
+        default_errors = []
+        if sector_501.get("exports") != []:
+            default_errors.append(f"exports default mismatch: {sector_501.get('exports')}")
+        if sector_501.get("export_total") != 0:
+            default_errors.append(f"export_total default mismatch: {sector_501.get('export_total')}")
+        if sector_501.get("export_text") != "":
+            default_errors.append(f"export_text default mismatch: {sector_501.get('export_text')}")
+        if sector_501.get("has_save") is not None:
+            default_errors.append(f"has_save default mismatch: {sector_501.get('has_save')}")
+        if sector_501.get("items") != {}:
+            default_errors.append(f"items default mismatch: {sector_501.get('items')}")
+        if sector_501.get("storage_capacity") != 0:
+            default_errors.append(f"storage_capacity default mismatch: {sector_501.get('storage_capacity')}")
+        
+        if default_errors:
+            results.add_fail("New Fields - Sector 501 Defaults", "; ".join(default_errors))
+        else:
+            results.add_pass("New Fields - Sector 501 Defaults", "All defaults correct: exports=[], export_total=0, export_text='', has_save=null, items={}, storage_capacity=0")
+    
+    except Exception as e:
+        results.add_fail("New Fields - Import and GET", f"Exception: {str(e)}")
+
+def test_new_fields_update():
+    """Test PUT /api/sectors/{id} with export_text and export_total"""
+    print("\n" + "="*80)
+    print("TEST: New Fields - PUT Update")
+    print("="*80)
+    
+    try:
+        # Get sector 500 to update
+        sectors_response = requests.get(f"{BASE_URL}/sectors", params={"planet": TEST_PLANET})
+        if sectors_response.status_code != 200:
+            results.add_fail("New Fields - PUT Setup", "Failed to get test sectors")
+            return
+        
+        sectors = sectors_response.json()
+        sector_500 = next((s for s in sectors if s["sector_id"] == 500), None)
+        if not sector_500:
+            results.add_fail("New Fields - PUT Setup", "Sector 500 not found")
+            return
+        
+        sector_id = sector_500["id"]
+        
+        # Update export_text and export_total
+        update_payload = {
+            "export_text": "copper 10.0/min",
+            "export_total": 10
+        }
+        
+        response = requests.put(f"{BASE_URL}/sectors/{sector_id}", json=update_payload)
+        if response.status_code != 200:
+            results.add_fail("New Fields - PUT Update", f"PUT failed with status {response.status_code}: {response.text}")
+            return
+        
+        updated_sector = response.json()
+        
+        # Verify updates
+        if updated_sector.get("export_text") == "copper 10.0/min" and updated_sector.get("export_total") == 10:
+            results.add_pass("New Fields - PUT Update", "export_text and export_total updated successfully")
+        else:
+            results.add_fail("New Fields - PUT Update", f"Update failed: export_text={updated_sector.get('export_text')}, export_total={updated_sector.get('export_total')}")
+    
+    except Exception as e:
+        results.add_fail("New Fields - PUT Update", f"Exception: {str(e)}")
+
 def main():
     print("="*80)
     print("SERPULO COMMAND API - COMPREHENSIVE BACKEND TESTS")
@@ -647,6 +798,10 @@ def main():
     test_delete_sector_by_id()
     test_delete_sector_not_found()
     test_delete_sectors_by_planet()
+    
+    # New fields tests
+    test_new_fields_import_and_get()
+    test_new_fields_update()
     
     # Final cleanup
     print("\n" + "="*80)

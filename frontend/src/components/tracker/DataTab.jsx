@@ -9,7 +9,6 @@ const COLS = [
   { key: "sector_id", label: "ID" },
   { key: "difficulty", label: "Difficulty" },
   { key: "status", label: "Status" },
-  { key: "power", label: "Power" },
   { key: "wave", label: "Wave" },
   { key: "output", label: "Output" },
   { key: "updated_at", label: "Updated" },
@@ -66,7 +65,6 @@ export default function DataTab({ sectors, onOpen }) {
                       {meta.label}
                     </span>
                   </TableCell>
-                  <TableCell className="py-2 text-slate-800">{s.power >= 0 ? "+" : ""}{s.power || 0}</TableCell>
                   <TableCell className="py-2 text-slate-800">{s.wave}</TableCell>
                   <TableCell className="py-2 text-slate-500 whitespace-nowrap">{Math.round(s.output || 0)}/min</TableCell>
                   <TableCell className="py-2 text-[12px] text-slate-500">{fmtDate(s.updated_at)}</TableCell>

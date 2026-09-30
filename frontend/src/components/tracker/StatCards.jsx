@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldCheck, Crosshair, BarChart3, Waves } from "lucide-react";
+import { ShieldCheck, Crosshair, BarChart3, Waves, Send } from "lucide-react";
 
 function Card({ label, value, sub, icon: Icon, iconClass, children, testid }) {
   return (
@@ -19,7 +19,7 @@ function Card({ label, value, sub, icon: Icon, iconClass, children, testid }) {
 }
 
 export default function StatCards({ stats }) {
-  const { total, captured, attacked, lost, unclaimed, output, maxWave, numbered } = stats;
+  const { total, captured, attacked, lost, unclaimed, output, maxWave, numbered, exportTotal = 0, exportsByItem = [] } = stats;
   const pct = total ? (captured / total) * 100 : 0;
   return (
     <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -65,6 +65,36 @@ export default function StatCards({ stats }) {
         icon={Waves}
         iconClass="text-indigo-600"
       />
+      <div
+        data-testid="stat-exports"
+        className="col-span-2 rounded-xl border border-slate-200 bg-white p-4 lg:col-span-4"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-600">Total Exports by Resource</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[12.5px] text-slate-500">
+              <b className="text-[15px] font-bold text-slate-900" data-testid="stat-exports-total">{exportTotal}</b> items / min
+            </span>
+            <Send className="h-4 w-4 text-sky-600" />
+          </div>
+        </div>
+        {exportsByItem.length ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {exportsByItem.map((e) => (
+              <span
+                key={e.item}
+                data-testid={`export-chip-${e.item}`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-sky-100 bg-sky-50 px-2 py-1 text-[12px] text-sky-800"
+              >
+                {e.item}
+                <b className="font-semibold text-slate-900">{e.rate.toLocaleString()}/min</b>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-[12.5px] text-slate-400">No exports logged — sectors only record exports while launch pads are active.</p>
+        )}
+      </div>
     </div>
   );
 }

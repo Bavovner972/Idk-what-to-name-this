@@ -1,7 +1,7 @@
 // Parses Mindustry settings.bin (Arc Settings binary format) and extracts campaign sector info.
 // Sector info is stored under keys "<planet>-s-<id>-info" as UBJSON-encoded SectorInfo.
-import JSZip from "jszip";
-import { getPreset, findPresetByKey, computeThreat, threatLabel } from "./presets";
+import JSZip from "/app/frontend/node_modules/jszip/lib/index.js";
+import { getPreset, findPresetByKey, computeThreat, threatLabel } from "./presets.mjs";
 
 const utf8 = new TextDecoder("utf-8");
 

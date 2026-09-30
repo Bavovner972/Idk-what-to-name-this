@@ -1,6 +1,8 @@
 import React from "react";
-import { Zap, Activity, CalendarDays, Hash } from "lucide-react";
+import { Send, Package, CalendarDays, Hash } from "lucide-react";
 import { DIFF_COLOR, STATUS_META } from "../../lib/presets";
+
+const fmtQty = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : `${Math.round(n)}`);
 
 export const fmtDate = (iso) => {
   if (!iso) return "-";
@@ -10,6 +12,7 @@ export const fmtDate = (iso) => {
 
 export default function SectorCard({ sector: s, onClick }) {
   const meta = STATUS_META[s.status] || STATUS_META.unclaimed;
+  const storage = Object.entries(s.items || {}).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
   return (
     <button
       onClick={onClick}
@@ -37,17 +40,28 @@ export default function SectorCard({ sector: s, onClick }) {
       </div>
 
       <div className="mt-2 space-y-1 text-[12.5px] text-slate-500">
-        <div className="flex items-center gap-2">
-          <Zap className="h-3.5 w-3.5 text-amber-500" />
-          <span className="font-semibold text-slate-800">
-            {s.power >= 0 ? "+" : ""}
-            {s.power || 0}
-          </span>
-          <span>power</span>
+        <div className="flex items-start gap-2" data-testid={`card-exports-${s.sector_id}`}>
+          <Send className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-500" />
+          <span className="line-clamp-2">{s.export_text || "No exports logged"}</span>
         </div>
-        <div className="flex items-start gap-2">
-          <Activity className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span className="line-clamp-2">{s.production_text || "No production logged"}</span>
+        <div className="flex items-start gap-2" data-testid={`card-storage-${s.sector_id}`}>
+          <Package className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <span className="line-clamp-2">
+            {storage.length ? (
+              <>
+                {storage.slice(0, 3).map(([k, v], i) => (
+                  <span key={k}>
+                    {i > 0 && ", "}
+                    {k} <b className="font-semibold text-slate-700">{fmtQty(v)}</b>
+                  </span>
+                ))}
+                {storage.length > 3 && <span className="text-slate-400"> +{storage.length - 3} more</span>}
+                {s.storage_capacity > 0 && <span className="text-slate-400"> / {fmtQty(s.storage_capacity)} cap</span>}
+              </>
+            ) : (
+              "No storage logged"
+            )}
+          </span>
         </div>
         {s.wave > 0 && <div className="text-slate-500">Wave {s.wave}</div>}
       </div>

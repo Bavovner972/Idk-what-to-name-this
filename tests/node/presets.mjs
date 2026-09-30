@@ -1,5 +1,5 @@
 // Sector presets + threat logic, based on the official Mindustry v8 (build 160.5) data in sectorData.js
-import { SECTOR_DATA } from "./sectorData";
+import { SECTOR_DATA } from "./sectorData.mjs";
 
 export const getPreset = (planet, id) => {
   const p = SECTOR_DATA[planet]?.presets?.[id];
