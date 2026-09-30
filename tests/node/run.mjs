@@ -10,8 +10,8 @@ for (const pn of Object.keys(SECTOR_DATA)) {
 }
 for (const f of process.argv.slice(2)) {
   const file = { arrayBuffer: async () => new Uint8Array(fs.readFileSync(f)).buffer };
-  const { values, saves } = await loadSettingsFromFile(file);
-  const r = extractSectors(values, saves);
+  const { values, saves, remaps } = await loadSettingsFromFile(file);
+  const r = extractSectors(values, saves, remaps);
   console.log("==", f, "saves:", saves ? JSON.stringify(Object.fromEntries(Object.entries(saves).map(([k, v]) => [k, [...v]]))) : null, "errors:", r.errors, "skipped:", r.skipped);
   for (const [p, l] of Object.entries(r.planets)) for (const s of l) console.log(" ", p, "#" + s.sector_id, s.name, "|", s.status, "|", s.difficulty, "| numbered:", s.numbered, "| wave", s.wave, "| exp:", s.export_text, "| items:", JSON.stringify(s.items).slice(0, 60));
 }

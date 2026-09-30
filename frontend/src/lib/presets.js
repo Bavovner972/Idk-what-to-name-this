@@ -13,6 +13,14 @@ export const findPresetByKey = (planet, key) => {
   return null;
 };
 
+// Named (requireUnlock) presets are registered before the generated "sector-<planet>-N" ones, so they win
+export const findPresetByOriginalPosition = (planet, pos) => {
+  const map = SECTOR_DATA[planet]?.presets || {};
+  const ids = Object.keys(map).filter((id) => map[id].originalPosition === pos);
+  const id = ids.find((i) => map[i].requireUnlock) ?? ids[0];
+  return id != null ? { id: Number(id), ...map[id] } : null;
+};
+
 // Mindustry Sector.displayThreat(): index = (int)(threat / 0.25), capped at eradication
 export const threatLabel = (t) => {
   if (t == null || Number.isNaN(t)) return "Unknown";
@@ -52,7 +60,7 @@ export const DIFF_COLOR = {
   Unknown: "text-slate-400",
 };
 
-export const STATUSES = ["captured", "under_attack", "lost", "unclaimed"];
+export const STATUSES = ["captured", "under_attack", "lost"];
 export const STATUS_META = {
   captured: { label: "Captured", dot: "bg-emerald-500", badge: "border-emerald-200 bg-emerald-50 text-emerald-700", color: "#10b981" },
   under_attack: { label: "Under Attack", dot: "bg-amber-500", badge: "border-amber-200 bg-amber-50 text-amber-700", color: "#f59e0b" },

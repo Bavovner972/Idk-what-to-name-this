@@ -1,8 +1,9 @@
 import React from "react";
-import { LayoutGrid, BarChart3, Table2 } from "lucide-react";
+import { LayoutGrid, Globe2, BarChart3, Table2 } from "lucide-react";
 
 export const TABS = [
   { id: "sectors", label: "Sectors", icon: LayoutGrid },
+  { id: "planet", label: "Planet", icon: Globe2 },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "data", label: "Data", icon: Table2 },
 ];
@@ -10,7 +11,7 @@ export const TABS = [
 export default function MobileNav({ tab, onTab }) {
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur">
-      <div className="grid grid-cols-3">
+      <div className="grid grid-cols-4">
         {TABS.map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;

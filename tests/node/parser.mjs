@@ -1,7 +1,7 @@
 // Parses Mindustry settings.bin (Arc Settings binary format) and extracts campaign sector info.
 // Sector info is stored under keys "<planet>-s-<id>-info" as UBJSON-encoded SectorInfo.
 import JSZip from "/app/frontend/node_modules/jszip/lib/index.js";
-import { getPreset, findPresetByKey, computeThreat, threatLabel } from "./presets.mjs";
+import { getPreset, findPresetByKey, findPresetByOriginalPosition, computeThreat, threatLabel } from "./presets.mjs";
 
 const utf8 = new TextDecoder("utf-8");
 
@@ -152,6 +152,7 @@ export async function loadSettingsFromFile(file) {
   let bytes = new Uint8Array(await file.arrayBuffer());
   const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b;
   let saves = null;
+  let remaps = null;
   if (isZip) {
     const zip = await JSZip.loadAsync(bytes);
     const files = Object.values(zip.files).filter((f) => !f.dir);
@@ -159,10 +160,10 @@ export async function loadSettingsFromFile(file) {
     if (!entry) throw new Error("No settings.bin found inside the zip");
     bytes = await entry.async("uint8array");
     const hasSavesDir = files.some((f) => /(^|\/)saves\//i.test(f.name));
-    if (hasSavesDir) saves = await findSectorSaves(files);
+    if (hasSavesDir) ({ saves, remaps } = await findSectorSaves(files));
   }
   const values = await readSettings(bytes);
-  return { values, saves };
+  return { values, saves, remaps };
 }
 
 // ---------- .msav save files ----------
@@ -204,22 +205,24 @@ export async function readSaveMeta(bytes) {
   return meta;
 }
 
-// Mirrors Saves.load(): a save belongs to rules.sector, unless its "sectorPreset" tag points to a
-// preset that now lives at another sector id (v8 renumbered Serpulo) - then it's remapped there.
+// Mirrors Saves.load(): a save belongs to rules.sector, unless it must be remapped (v8 renumbered Serpulo):
+//  - "sectorPreset" tag present & non-empty -> the preset's current sector
+//  - tag absent (legacy save) -> the preset whose originalPosition was this sector id
+// Returns { saves: {planet: Set(ids)}, remaps: {planet: Map(sourceId -> targetId)} }
 async function findSectorSaves(files) {
   const saves = {};
+  const remaps = {};
   const add = (planet, id) => (saves[planet] = saves[planet] || new Set()).add(id);
   const reName = /(^|\/)sector-([a-z0-9_-]+?)-(\d+)\.msav$/i;
   for (const f of files) {
-    if (!/(^|\/)saves\/[^/]+\.msav$/i.test(f.name)) continue;
+    if (!/(^|\/)saves\/.+\.msav$/i.test(f.name) || /backup/i.test(f.name.split("/").pop())) continue;
     let planet = null;
     let id = null;
-    let presetKey = null;
+    let meta = null;
     try {
-      const meta = await readSaveMeta(await f.async("uint8array"));
+      meta = await readSaveMeta(await f.async("uint8array"));
       const m = (meta.rules || "").match(/"?sector"?\s*:\s*"?([a-z0-9_]+)-(\d+)"?/i);
       if (m) { planet = m[1].toLowerCase(); id = Number(m[2]); }
-      presetKey = meta.sectorPreset || null;
     } catch (e) {
       // unreadable save - fall back to the file name
     }
@@ -229,13 +232,24 @@ async function findSectorSaves(files) {
       planet = n[2].toLowerCase();
       id = Number(n[3]);
     }
-    if (presetKey) {
-      const preset = findPresetByKey(planet, presetKey);
-      if (preset && preset.requireUnlock) id = preset.id;
+    let target = null;
+    const presetKey = meta ? meta.sectorPreset : ""; // unreadable save: never guess a remap
+    if (presetKey != null) {
+      if (presetKey) {
+        const preset = findPresetByKey(planet, presetKey);
+        if (preset && preset.id !== id && preset.requireUnlock) target = preset.id;
+      }
+    } else {
+      const legacy = findPresetByOriginalPosition(planet, id);
+      if (legacy && legacy.id !== id && legacy.requireUnlock) target = legacy.id;
+    }
+    if (target != null) {
+      (remaps[planet] = remaps[planet] || new Map()).set(id, target);
+      id = target;
     }
     add(planet, id);
   }
-  return saves;
+  return { saves, remaps };
 }
 
 // ---------- sector info -> tracker sector ----------
@@ -325,7 +339,7 @@ function toSector(planet, id, info, hasSave = null) {
 }
 
 // Returns { planets: { serpulo: [...sectors], erekir: [...] }, errors: [], skipped: [] }
-export function extractSectors(values, saves = null) {
+export function extractSectors(values, saves = null, remaps = null) {
   const raw = {}; // planet -> Map(id -> info)
   const errors = [];
   const re = /^([a-z0-9_-]+?)-s-(\d+)-info$/;
@@ -350,6 +364,16 @@ export function extractSectors(values, saves = null) {
   const skipped = [];
   for (const [planet, infos] of Object.entries(raw)) {
     const saveSet = saves ? saves[planet] || new Set() : null;
+    // Save-driven remaps (Saves.load): the target sector takes over the source sector's info, the
+    // source info is cleared unless another save was remapped onto it.
+    const moves = remaps?.[planet];
+    if (moves && moves.size) {
+      const moved = new Map();
+      const targets = new Set(moves.values());
+      for (const [src, dst] of moves) if (infos.has(src)) moved.set(dst, infos.get(src));
+      for (const src of moves.keys()) if (!targets.has(src)) infos.delete(src);
+      for (const [dst, info] of moved) infos.set(dst, info);
+    }
     // Leftover info from before v8 renumbered the presets: lastPresetName says it belongs to a preset
     // that now lives at another id. Move it there if that sector has no info, otherwise drop the stale copy.
     for (const [id, info] of [...infos.entries()]) {

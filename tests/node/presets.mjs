@@ -13,6 +13,14 @@ export const findPresetByKey = (planet, key) => {
   return null;
 };
 
+// Named (requireUnlock) presets are registered before the generated "sector-<planet>-N" ones, so they win
+export const findPresetByOriginalPosition = (planet, pos) => {
+  const map = SECTOR_DATA[planet]?.presets || {};
+  const ids = Object.keys(map).filter((id) => map[id].originalPosition === pos);
+  const id = ids.find((i) => map[i].requireUnlock) ?? ids[0];
+  return id != null ? { id: Number(id), ...map[id] } : null;
+};
+
 // Mindustry Sector.displayThreat(): index = (int)(threat / 0.25), capped at eradication
 export const threatLabel = (t) => {
   if (t == null || Number.isNaN(t)) return "Unknown";

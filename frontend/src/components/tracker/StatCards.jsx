@@ -19,7 +19,7 @@ function Card({ label, value, sub, icon: Icon, iconClass, children, testid }) {
 }
 
 export default function StatCards({ stats }) {
-  const { total, captured, attacked, lost, unclaimed, output, maxWave, numbered, exportTotal = 0, exportsByItem = [] } = stats;
+  const { total, captured, attacked, lost, output, maxWave, numbered, exportTotal = 0, exportsByItem = [] } = stats;
   const pct = total ? (captured / total) * 100 : 0;
   return (
     <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -38,7 +38,6 @@ export default function StatCards({ stats }) {
           <span className="flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{captured}</span>
           <span className="flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-amber-500" />{attacked || ""}</span>
           <span className="flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-rose-500" />{lost}</span>
-          <span className="flex items-center gap-1"><i className="h-1.5 w-1.5 rounded-full bg-slate-300" />{unclaimed}</span>
         </div>
       </Card>
       <Card

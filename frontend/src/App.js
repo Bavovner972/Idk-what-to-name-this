@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import Header from "./components/tracker/Header";
 import StatCards from "./components/tracker/StatCards";
 import SectorsTab from "./components/tracker/SectorsTab";
+import PlanetTab from "./components/tracker/PlanetTab";
 import AnalyticsTab from "./components/tracker/AnalyticsTab";
 import DataTab from "./components/tracker/DataTab";
 import EditSectorDialog from "./components/tracker/EditSectorDialog";
@@ -14,12 +15,15 @@ import { fetchSectors, fetchPlanets, importSectors, updateSector, deleteSector }
 import { loadSettingsFromFile, extractSectors } from "./lib/mindustryParser";
 import { DIFF_RANK } from "./lib/presets";
 
-const STATUS_RANK = { under_attack: 0, captured: 1, unclaimed: 2, lost: 3 };
+const STATUS_RANK = { under_attack: 0, captured: 1, lost: 2 };
 
-// Status first (under attack -> captured -> unclaimed -> lost), then threat (low -> eradication, unknown last),
+// Unclaimed sectors (only viewed/nearby, never held) carry no useful data - the tracker ignores them.
+const owned = (list) => list.filter((s) => s.status !== "unclaimed");
+
+// Status first (under attack -> captured -> lost), then threat (low -> eradication, unknown last),
 // then campaign order for named sectors / id for numbered ones.
 const sortSectors = (list) =>
-  [...list].sort((a, b) => {
+  [...owned(list)].sort((a, b) => {
     const s = (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9);
     if (s) return s;
     const d = (DIFF_RANK[a.difficulty] ?? 9) - (DIFF_RANK[b.difficulty] ?? 9);
@@ -65,10 +69,14 @@ function App() {
     setImporting(true);
     const t = toast.loading(`Reading ${file.name}...`);
     try {
-      const { values, saves } = await loadSettingsFromFile(file);
-      const { planets: found, errors, skipped } = extractSectors(values, saves);
+      const { values, saves, remaps } = await loadSettingsFromFile(file);
+      const { planets: found, errors, skipped } = extractSectors(values, saves, remaps);
+      for (const p of Object.keys(found)) {
+        found[p] = owned(found[p]);
+        if (!found[p].length) delete found[p];
+      }
       const names = Object.keys(found);
-      if (!names.length) throw new Error("No campaign sector data found in this file");
+      if (!names.length) throw new Error("No captured sectors found in this file");
       const summary = [];
       for (const p of names) {
         const res = await importSectors(p, found[p]);
@@ -183,15 +191,17 @@ function App() {
 
         <div className="mt-5 md:mt-5 animate-fade-in" key={tab + planet}>
           {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-40 rounded-xl border border-slate-200 bg-white animate-pulse" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="h-32 rounded-lg border border-slate-200 bg-white animate-pulse" />
               ))}
             </div>
           ) : sectors.length === 0 ? (
             <EmptyState onImport={openImport} planet={planet} importing={importing} />
           ) : tab === "sectors" ? (
             <SectorsTab sectors={sectors} onOpen={setEditing} />
+          ) : tab === "planet" ? (
+            <PlanetTab planet={planet} sectors={sectors} onOpen={setEditing} />
           ) : tab === "analytics" ? (
             <AnalyticsTab sectors={sectors} stats={stats} />
           ) : (
