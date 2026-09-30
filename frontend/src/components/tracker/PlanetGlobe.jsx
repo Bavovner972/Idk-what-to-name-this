@@ -79,7 +79,7 @@ export default function PlanetGlobe({ planet, byId, view, onView, selected, onSe
   return (
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}
-      className="h-auto w-full max-w-[560px] touch-none select-none cursor-grab active:cursor-grabbing"
+      className="h-auto w-full max-w-[560px] xl:max-w-[680px] touch-none select-none cursor-grab active:cursor-grabbing"
       data-testid="planet-globe"
       onPointerDown={onDown}
       onPointerMove={onMove}

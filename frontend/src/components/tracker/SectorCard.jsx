@@ -50,13 +50,13 @@ export default function SectorCard({ sector: s, onClick, highlight }) {
           <span className="line-clamp-1">
             {storage.length ? (
               <>
-                {storage.slice(0, 2).map(([k, v], i) => (
+                {storage.slice(0, 3).map(([k, v], i) => (
                   <span key={k}>
                     {i > 0 && ", "}
                     {k} <b className="font-semibold text-slate-700">{fmtQty(v)}</b>
                   </span>
                 ))}
-                {storage.length > 2 && <span className="text-slate-400"> +{storage.length - 2}</span>}
+                {storage.length > 3 && <span className="text-slate-400"> +{storage.length - 3}</span>}
                 {s.storage_capacity > 0 && <span className="text-slate-400"> / {fmtQty(s.storage_capacity)}</span>}
               </>
             ) : (

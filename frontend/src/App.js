@@ -165,7 +165,7 @@ function App() {
         onChange={onFile}
         data-testid="import-file-input"
       />
-      <main className="mx-auto max-w-7xl px-4 sm:px-6">
+      <main className="mx-auto max-w-[1920px] px-4 sm:px-6 xl:px-10 2xl:px-14">
         <StatCards stats={stats} />
 
         <div className="mt-6 hidden md:flex border-b border-slate-200" role="tablist">

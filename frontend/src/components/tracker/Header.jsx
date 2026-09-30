@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 export default function Header({ planet, planets, onPlanet, onImport, importing }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-[1920px] items-center justify-between px-4 sm:px-6 xl:px-10 2xl:px-14">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-200">
             <Zap className="h-5 w-5" strokeWidth={2.2} />
