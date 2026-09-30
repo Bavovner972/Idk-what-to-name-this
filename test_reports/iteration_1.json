@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only regression for Mindustry Campaign Tracker (Serpulo). All 7 review items verified passing on the preview URL. Sectors tab: 43 cards, no Unclaimed pill/badge (status-filter-unclaimed absent, all/captured/under_attack/lost present). Grid 5-per-row at 1920 confirmed by y-coordinates of first 6 cards ([521 x5, 656]); 1-per-row on 390px viewport with no horizontal overflow (scrollWidth==clientWidth==390). Resource filter dropdown lists 19 resources with counts including 'titanium (38)', selecting titanium filters to 38 cards, shows summary '38 sectors with titanium (on the map or in core storage)', renders card-resource-* rows, clear button returns to 43. Planet tab: planet-globe with 142 globe-tile-* polygons; legend shows Captured 40 / Under Attack 2 / Lost 1 / Not captured; planet-owned-count = '43 sectors in save'. Clicking globe-tile-170 opens planet-sector-panel for Ground Zero (Captured); planet-edit-btn opens edit-sector-dialog. Edit-status dropdown offers exactly ['captured','under attack','lost']. Drag rotates globe (tile170 x moved 642 -> 889) without changing panel selection. Recenter works. Analytics + Data tabs render without errors. Import legacy_export.zip: toast 'Save imported serpulo: 3 sectors' shown; DB replaced; Stained Mountains #223, Ground Zero #170, Frozen Forest #64 all Captured; sector #60 absent.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "root (all tabs)", "issues": ["React hydration warning: '<span> cannot be a child of <option>'. Likely from the native <select data-testid=resource-filter> rendering count badges inside <option>. Non-blocking but produces console error on every mount."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: remove <span> wrappers inside <option> elements in the resource-filter select to eliminate the React hydration warning."
+  ],
+  "critical_code_review_comments": [
+    "Native <select> option content contains span elements causing hydration warning; consider using plain text (`${name} (${count})`) as the option's textContent only."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "seed_data_creation": "Import test replaced serpulo DB with 3 sectors from /app/tests/legacy_export.zip (Ground Zero, Frozen Forest, Stained Mountains, all Captured). Original 54-sector dataset is no longer present; main agent may want to reseed if needed.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "DB now contains only 3 serpulo sectors post-import test. Re-import real_v8_export.zip via UI or reseed to restore the 54-sector dataset before re-running tests that rely on the full save."
+}
