@@ -1,6 +1,7 @@
 import React from "react";
-import { Send, Package, Hash, Gem } from "lucide-react";
+import { Send, Package, Hash } from "lucide-react";
 import { DIFF_COLOR, STATUS_META } from "../../lib/presets";
+import ResourceIcon from "./ResourceIcon";
 
 const fmtQty = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : `${Math.round(n)}`);
 
@@ -19,45 +20,46 @@ export default function SectorCard({ sector: s, onClick, highlight }) {
     <button
       onClick={onClick}
       data-testid={`sector-card-${s.sector_id}`}
-      className="card-lift group flex w-full flex-col rounded-lg border border-slate-200 bg-white p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200"
+      className="card-lift panel group relative flex w-full flex-col overflow-hidden p-3 pl-3.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ffd37f]/50"
     >
+      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: meta.color }} />
       <div className="flex items-start justify-between gap-1.5">
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <h3 className="truncate text-[13px] font-semibold tracking-tightish text-slate-900">{s.name}</h3>
+            <h3 className="truncate text-[13px] font-semibold tracking-tightish text-[#e2e8f0]">{s.name}</h3>
             {s.numbered && (
-              <span className="inline-flex shrink-0 items-center rounded bg-slate-100 px-1 py-px font-mono-ui text-[9.5px] font-semibold text-slate-500">
+              <span className="inline-flex shrink-0 items-center rounded-[2px] border border-[#343845] bg-[#15161a] px-1 py-px font-mono-ui text-[9.5px] font-semibold text-[#94a3b8]">
                 <Hash className="mr-px h-2 w-2" />
                 {s.sector_id}
               </span>
             )}
           </div>
-          <div className={`text-[11px] font-medium ${DIFF_COLOR[s.difficulty] || DIFF_COLOR.Unknown}`}>
+          <div className={`font-mono-ui text-[10.5px] font-semibold uppercase tracking-wide ${DIFF_COLOR[s.difficulty] || DIFF_COLOR.Unknown}`}>
             {s.difficulty === "Unknown" ? "Unknown threat" : s.difficulty}
-            {s.wave > 0 && <span className="text-slate-400"> · wave {s.wave}</span>}
+            {s.wave > 0 && <span className="font-normal normal-case tracking-normal text-[#64748b]"> · wave {s.wave}</span>}
           </div>
         </div>
-        <span className={`shrink-0 rounded-full border px-1.5 py-px text-[10px] font-medium ${meta.badge}`}>{meta.label}</span>
+        <span className={`shrink-0 rounded-[2px] border px-1.5 py-px font-mono-ui text-[9.5px] font-semibold uppercase tracking-wide ${meta.badge}`}>{meta.label}</span>
       </div>
 
-      <div className="mt-1.5 space-y-0.5 text-[11px] leading-snug text-slate-500">
+      <div className="mt-2 space-y-1 text-[11px] leading-snug text-[#94a3b8]">
         <div className="flex items-start gap-1.5" data-testid={`card-exports-${s.sector_id}`}>
-          <Send className="mt-0.5 h-3 w-3 shrink-0 text-sky-500" />
+          <Send className="mt-0.5 h-3 w-3 shrink-0 text-[#60a5fa]" />
           <span className="line-clamp-1">{s.export_text || "No exports"}</span>
         </div>
         <div className="flex items-start gap-1.5" data-testid={`card-storage-${s.sector_id}`}>
-          <Package className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" />
-          <span className="line-clamp-1">
+          <Package className="mt-0.5 h-3 w-3 shrink-0 text-[#64748b]" />
+          <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
             {storage.length ? (
               <>
-                {storage.slice(0, 3).map(([k, v], i) => (
-                  <span key={k}>
-                    {i > 0 && ", "}
-                    {k} <b className="font-semibold text-slate-700">{fmtQty(v)}</b>
+                {storage.slice(0, 3).map(([k, v]) => (
+                  <span key={k} className="inline-flex items-center gap-1 whitespace-nowrap">
+                    <ResourceIcon name={k} size={13} />
+                    <b className="font-mono-ui font-semibold text-[#cbd5e1]">{fmtQty(v)}</b>
                   </span>
                 ))}
-                {storage.length > 3 && <span className="text-slate-400"> +{storage.length - 3}</span>}
-                {s.storage_capacity > 0 && <span className="text-slate-400"> / {fmtQty(s.storage_capacity)}</span>}
+                {storage.length > 3 && <span className="text-[#64748b]">+{storage.length - 3}</span>}
+                {s.storage_capacity > 0 && <span className="text-[#64748b]">/ {fmtQty(s.storage_capacity)}</span>}
               </>
             ) : (
               "No storage"
@@ -65,8 +67,8 @@ export default function SectorCard({ sector: s, onClick, highlight }) {
           </span>
         </div>
         {highlight && (
-          <div className="flex items-center gap-1.5 text-indigo-700" data-testid={`card-resource-${s.sector_id}`}>
-            <Gem className="h-3 w-3 shrink-0" />
+          <div className="flex items-center gap-1.5 text-[#ffd37f]" data-testid={`card-resource-${s.sector_id}`}>
+            <ResourceIcon name={highlight} size={13} />
             <span className="truncate">
               {highlight}: {onMap ? "on map" : ""}
               {onMap && stored > 0 ? " · " : ""}
@@ -76,7 +78,7 @@ export default function SectorCard({ sector: s, onClick, highlight }) {
         )}
       </div>
 
-      <div className="mt-auto pt-2 text-[10px] text-slate-400">Updated {fmtDate(s.updated_at)}</div>
+      <div className="mt-auto pt-2 font-mono-ui text-[9.5px] uppercase tracking-wider text-[#64748b]">Updated {fmtDate(s.updated_at)}</div>
     </button>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { Search, Gem, X } from "lucide-react";
+import { Search, Gem, X, ChevronDown } from "lucide-react";
 import SectorCard from "./SectorCard";
+import ResourceIcon from "./ResourceIcon";
 
 const STATUS_FILTERS = [
   { id: "all", label: "All" },
@@ -16,15 +17,7 @@ const TYPE_FILTERS = [
 ];
 
 const Pill = ({ active, onClick, children, testid }) => (
-  <button
-    data-testid={testid}
-    onClick={onClick}
-    className={`h-7 rounded-full border px-3 text-[12.5px] font-medium transition-colors ${
-      active
-        ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
-        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
-    }`}
-  >
+  <button data-testid={testid} onClick={onClick} className={`pill h-7 px-3 ${active ? "pill-active" : ""}`}>
     {children}
   </button>
 );
@@ -72,24 +65,24 @@ export default function SectorsTab({ sectors, onOpen }) {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative w-full sm:w-[260px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
             <input
               data-testid="sector-search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search sectors..."
-              className="h-9 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-shadow focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="input-dark h-9 w-full pl-9 pr-3 text-sm"
             />
           </div>
-          <div className="relative w-full sm:w-[220px]">
-            <Gem className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${resource ? "text-indigo-600" : "text-slate-400"}`} />
+          <div className="relative w-full sm:w-[230px]">
+            <span className="pointer-events-none absolute left-2.5 top-1/2 flex -translate-y-1/2 items-center">
+              {resource ? <ResourceIcon name={resource} size={18} /> : <Gem className="h-4 w-4 text-[#64748b]" />}
+            </span>
             <select
               data-testid="resource-filter"
               value={resource}
               onChange={(e) => setResource(e.target.value)}
-              className={`h-9 w-full appearance-none rounded-md border bg-white pl-9 pr-8 text-sm outline-none transition-shadow focus:ring-2 focus:ring-indigo-100 ${
-                resource ? "border-indigo-300 text-indigo-700 font-medium" : "border-slate-200 text-slate-600"
-              }`}
+              className={`input-dark h-9 w-full appearance-none pl-9 pr-8 text-sm ${resource ? "!border-[#ffd37f]/70 font-medium !text-[#ffd37f]" : "text-[#94a3b8]"}`}
             >
               <option value="">Any resource</option>
               {resources.map(([r, n]) => (
@@ -102,26 +95,26 @@ export default function SectorsTab({ sectors, onOpen }) {
               <button
                 data-testid="resource-filter-clear"
                 onClick={() => setResource("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:text-slate-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[#94a3b8] hover:text-[#ffd37f]"
                 aria-label="Clear resource filter"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             ) : (
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">▼</span>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#64748b]" />
             )}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {hasNumbered && (
-            <div className="mr-1 flex items-center gap-1 rounded-full bg-slate-100 p-0.5" data-testid="type-filter">
+            <div className="mr-1 flex items-center gap-0.5 rounded-[3px] border border-[#343845] bg-[#15161a] p-0.5" data-testid="type-filter">
               {TYPE_FILTERS.map((t) => (
                 <button
                   key={t.id}
                   data-testid={`type-filter-${t.id}`}
                   onClick={() => setType(t.id)}
-                  className={`h-6 rounded-full px-2.5 text-[12px] font-medium transition-colors ${
-                    type === t.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  className={`h-6 rounded-[2px] px-2.5 font-mono-ui text-[11px] font-semibold uppercase tracking-wide transition-colors ${
+                    type === t.id ? "bg-[#343845] text-[#e2e8f0]" : "text-[#64748b] hover:text-[#e2e8f0]"
                   }`}
                 >
                   {t.label}
@@ -138,15 +131,16 @@ export default function SectorsTab({ sectors, onOpen }) {
       </div>
 
       {resource && (
-        <p className="mt-3 text-[12.5px] text-slate-500" data-testid="resource-filter-summary">
-          <b className="font-semibold text-slate-800">{filtered.length}</b> sector{filtered.length === 1 ? "" : "s"} with{" "}
-          <b className="font-semibold text-indigo-700">{resource}</b> (on the map or in core storage)
+        <p className="mt-3 flex items-center gap-1.5 text-[12.5px] text-[#94a3b8]" data-testid="resource-filter-summary">
+          <b className="font-mono-ui font-semibold text-[#e2e8f0]">{filtered.length}</b> sector{filtered.length === 1 ? "" : "s"} with
+          <ResourceIcon name={resource} size={14} />
+          <b className="font-semibold text-[#ffd37f]">{resource}</b> (on the map or in core storage)
         </p>
       )}
 
       {filtered.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-dashed border-slate-300 bg-white py-16 text-center text-sm text-slate-500">
-          No sectors match your filters.
+        <div className="mt-10 border border-dashed border-[#343845] bg-[#15161a] py-16 text-center font-mono-ui text-sm uppercase tracking-wider text-[#64748b]">
+          No sectors match your filters
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" data-testid="sector-grid">

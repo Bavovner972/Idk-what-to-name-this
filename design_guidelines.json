@@ -1,0 +1,94 @@
+{
+  "project_name": "Serpulo Command - Mindustry Campaign Tracker UI",
+  "archetype": "THE PERFORMANCE PRO / TACTICAL INDUSTRIAL COMMAND",
+  "theme": "dark",
+  "typography": {
+    "google_fonts_import": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap",
+    "heading_font": "'JetBrains Mono', monospace",
+    "body_font": "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+    "mono_font": "'JetBrains Mono', monospace",
+    "heading_rules": {
+      "case": "uppercase / tracking-tight",
+      "font_weight": "font-bold (700 or 800)",
+      "letter_spacing": "tracking-wider or tracking-tight depending on overline vs title"
+    }
+  },
+  "colors": {
+    "hex": {
+      "background": "#121317",
+      "card_surface": "#1a1b20",
+      "card_surface_hover": "#22242c",
+      "border": "#343845",
+      "border_highlight": "#ffd37f",
+      "primary": "#ffd37f",
+      "primary_hover": "#ffe1a0",
+      "primary_foreground": "#121317",
+      "foreground": "#e2e8f0",
+      "muted_foreground": "#94a3b8",
+      "status_captured": "#38d39f",
+      "status_under_attack": "#ffaa5f",
+      "status_lost": "#e55858",
+      "threat_low": "#38d39f",
+      "threat_medium": "#60a5fa",
+      "threat_high": "#ffaa5f",
+      "threat_extreme": "#f43f5e",
+      "threat_eradication": "#d946ef"
+    },
+    "css_variables_hsl": {
+      "--background": "225 14% 8%",
+      "--foreground": "215 20% 90%",
+      "--card": "225 10% 11%",
+      "--card-foreground": "215 20% 90%",
+      "--popover": "225 10% 11%",
+      "--popover-foreground": "215 20% 90%",
+      "--primary": "40 100% 75%",
+      "--primary-foreground": "225 14% 8%",
+      "--secondary": "225 13% 17%",
+      "--secondary-foreground": "215 20% 90%",
+      "--muted": "225 13% 17%",
+      "--muted-foreground": "215 16% 65%",
+      "--accent": "40 100% 75%",
+      "--accent-foreground": "225 14% 8%",
+      "--destructive": "0 75% 62%",
+      "--destructive-foreground": "215 20% 95%",
+      "--border": "225 14% 24%",
+      "--input": "225 14% 24%",
+      "--ring": "40 100% 75%",
+      "--radius": "0.25rem"
+    }
+  },
+  "visual_enhancers": {
+    "border_style": "Hairline 1px metallic borders (#343845) with sharp or slightly rounded corners (rounded-sm/rounded-none)",
+    "panel_texture": "Subtle industrial grid lines background overlay (24px grid at 3% opacity)",
+    "indicators": "Status dots with subtle pulse keyframe animation for 'Under Attack' sectors",
+    "corner_brackets": "Industrial corner ticks or left border status accent strips (3px solid green/orange/red)",
+    "chip_styling": "Matte dark background (#15161a) with 1px border (#2a2d37) and pixel-art 32x32 Mindustry item sprites"
+  },
+  "layout": {
+    "header": "Fixed top bar with backdrop-blur-md bg-[#121317]/90 border-b border-[#343845] z-50 px-4 md:px-8",
+    "grid_sectors": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 (Compact 5 per row layout on xl)",
+    "container": "Full-width dashboard container with px-4 py-6 max-w-[1800px] mx-auto",
+    "planet_view": "Split layout: 3D/SVG dark planet viewport with tactical overlay side panel showing sector info and threat distribution"
+  },
+  "component_design": {
+    "buttons": "Industrial style with rounded-sm, font-mono, tracking-wider, uppercase text, primary in #ffd37f amber with bold dark text",
+    "cards": "Dark panel surface #1a1b20, hairline #343845 border, hover:border-[#ffd37f]/50 hover:shadow-[0_0_12px_rgba(255,211,127,0.1)] transition-all",
+    "badges": "Compact monospace pill badges with status-tinted borders and background (e.g. Captured: bg-[#38d39f]/10 text-[#38d39f] border-[#38d39f]/30)",
+    "inputs_and_selects": "Dark background #121317, border #343845, focus:border-[#ffd37f] text-slate-200. ABSOLUTELY NO TRANSPARENT BACKGROUNDS on dropdown menus or select items.",
+    "tables": "Dark metallic header #17181f with border-b #343845, alternating row hover effect with bg-[#22242c]",
+    "charts": "Recharts with dark surface #1a1b20, axis color #94a3b8, grid color #282a36, tooltip dark background #121317 with #ffd37f border"
+  },
+  "instructions_to_main_agent": [
+    "Import Google Fonts 'JetBrains Mono' and 'IBM Plex Sans' in public/index.html or src/index.css.",
+    "Update src/index.css with the dark mode CSS variables and Mindustry dark base styles.",
+    "Ensure all dropdowns, select menus, dialogs, and popovers have solid non-transparent background (#121317 or #1a1b20).",
+    "Apply data-testid attributes to all interactive elements, cards, inputs, and buttons.",
+    "Replace light theme colors and indigo accents with Mindustry amber (#ffd37f), dark steel panels (#1a1b20), and tactical status badges.",
+    "Test all components and ensure responsive 5-column grid layout for sector cards on xl screens."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": {
+    "anti_slop": "Avoid generic centered white/light layouts or soft rounded blue SaaS themes. Use dark industrial tactical UI with Mindustry amber accent.",
+    "transitions": "Do not apply transition: all globally. Apply targeted CSS transitions for background-color, border-color, and opacity.",
+    "testing": "All interactive elements MUST include data-testid attributes."
+  }
+}

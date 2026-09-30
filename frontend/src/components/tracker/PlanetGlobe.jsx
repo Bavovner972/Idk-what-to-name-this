@@ -1,14 +1,14 @@
 import React, { useMemo, useRef, useState } from "react";
 import { PLANET_TILES } from "../../lib/planetGeo";
-import { STATUS_META } from "../../lib/presets";
+import { STATUS_META, THREAT_COLOR, computeThreat, threatLabel } from "../../lib/presets";
 
 const SIZE = 600;
 const R = 272;
 const C = SIZE / 2;
 
 export const PLANET_STYLE = {
-  serpulo: { sphere: "#16233a", tile: "#3b4657", edge: "#1e2a3d", glow: "rgba(56,189,248,0.35)" },
-  erekir: { sphere: "#2a1d18", tile: "#4a4341", edge: "#2b221e", glow: "rgba(251,146,60,0.35)" },
+  serpulo: { sphere: "#141c2c", tile: "#2c3342", edge: "#1a2030", glow: "rgba(96,165,250,0.3)" },
+  erekir: { sphere: "#241a16", tile: "#3f3733", edge: "#231c19", glow: "rgba(255,170,95,0.3)" },
 };
 
 const rot = ([x, y, z], cy, sy, cp, sp) => {
@@ -31,11 +31,19 @@ export const tileCenter = (planet, id) => {
   return s.map((v) => v / n);
 };
 
-export default function PlanetGlobe({ planet, byId, view, onView, selected, onSelect }) {
+// Threat label per tile: owned sectors use their stored difficulty, others the game's baseline formula
+export const planetThreats = (planet, byId) => {
+  const tiles = PLANET_TILES[planet] || [];
+  return tiles.map((_, id) => byId[id]?.difficulty || threatLabel(computeThreat(planet, id)));
+};
+
+export default function PlanetGlobe({ planet, byId, view, onView, selected, onSelect, mode = "status", onGrab }) {
   const tiles = PLANET_TILES[planet];
   const style = PLANET_STYLE[planet] || PLANET_STYLE.serpulo;
   const [hover, setHover] = useState(null);
   const drag = useRef(null);
+
+  const threats = useMemo(() => planetThreats(planet, byId), [planet, byId]);
 
   const polys = useMemo(() => {
     if (!tiles) return [];
@@ -53,13 +61,14 @@ export default function PlanetGlobe({ planet, byId, view, onView, selected, onSe
   }, [tiles, view]);
 
   if (!tiles) {
-    return <div className="flex h-72 items-center justify-center text-sm text-slate-400" data-testid="planet-no-geometry">No map geometry for this planet.</div>;
+    return <div className="flex h-72 items-center justify-center text-sm text-[#64748b]" data-testid="planet-no-geometry">No map geometry for this planet.</div>;
   }
 
   const onDown = (e) => {
     const id = e.target.dataset?.tile;
     drag.current = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch, moved: false, id: id != null ? Number(id) : null };
     e.currentTarget.setPointerCapture(e.pointerId);
+    onGrab?.();
   };
   const onMove = (e) => {
     const d = drag.current;
@@ -76,11 +85,17 @@ export default function PlanetGlobe({ planet, byId, view, onView, selected, onSe
     if (d && !d.moved && d.id != null) onSelect(d.id);
   };
 
+  const fillFor = (p, s) => {
+    if (mode === "threat") return THREAT_COLOR[threats[p.id]] || style.tile;
+    return s ? STATUS_META[s.status].color : style.tile;
+  };
+
   return (
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}
       className="h-auto w-full max-w-[560px] xl:max-w-[680px] touch-none select-none cursor-grab active:cursor-grabbing"
       data-testid="planet-globe"
+      data-mode={mode}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
@@ -96,21 +111,21 @@ export default function PlanetGlobe({ planet, byId, view, onView, selected, onSe
       <circle cx={C} cy={C} r={R} fill={style.sphere} />
       {polys.map((p) => {
         const s = byId[p.id];
-        const meta = s ? STATUS_META[s.status] : null;
-        const shade = 0.45 + 0.55 * Math.max(0, p.z);
+        const coloured = mode === "threat" || !!s;
+        const depth = Math.max(0, p.z);
         const active = hover === p.id || selected === p.id;
+        const dim = mode === "threat" && !s;
         return (
           <polygon
             key={p.id}
             data-testid={`globe-tile-${p.id}`}
             data-tile={p.id}
             points={p.d}
-            fill={meta ? meta.color : style.tile}
-            fillOpacity={meta ? 0.55 + 0.45 * Math.max(0, p.z) : shade}
-            stroke={active ? "#ffffff" : meta ? "rgba(255,255,255,0.35)" : style.edge}
-            strokeWidth={active ? 2.2 : 0.9}
+            fill={fillFor(p, s)}
+            fillOpacity={coloured ? (dim ? 0.28 + 0.32 * depth : 0.55 + 0.45 * depth) : 0.45 + 0.55 * depth}
+            stroke={active ? "#ffd37f" : s ? "rgba(255,255,255,0.4)" : style.edge}
+            strokeWidth={active ? 2.4 : s ? 1.1 : 0.9}
             strokeLinejoin="round"
-            className="transition-[fill-opacity] duration-150"
             style={{ cursor: "pointer" }}
             onMouseEnter={() => setHover(p.id)}
             onMouseLeave={() => setHover((h) => (h === p.id ? null : h))}
@@ -130,9 +145,10 @@ export default function PlanetGlobe({ planet, byId, view, onView, selected, onSe
             dominantBaseline="middle"
             fontSize={s.numbered ? 9 : 8.5}
             fontWeight="600"
+            fontFamily="'JetBrains Mono', monospace"
             fill="#fff"
             className="pointer-events-none"
-            style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.55)", strokeWidth: 2 }}
+            style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.6)", strokeWidth: 2 }}
           >
             {label.length > 14 ? `${label.slice(0, 13)}…` : label}
           </text>

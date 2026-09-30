@@ -51,19 +51,20 @@ export const hasSectorData = (planet) => !!SECTOR_DATA[planet];
 
 export const DIFFICULTIES = ["Low", "Medium", "High", "Extreme", "Eradication", "Unknown"];
 export const DIFF_RANK = { Low: 0, Medium: 1, High: 2, Extreme: 3, Eradication: 4, Unknown: 5 };
+export const THREAT_COLOR = { Low: "#38d39f", Medium: "#60a5fa", High: "#ffaa5f", Extreme: "#f43f5e", Eradication: "#d946ef", Unknown: "#475569" };
 export const DIFF_COLOR = {
-  Low: "text-emerald-600",
-  Medium: "text-sky-600",
-  High: "text-orange-500",
-  Extreme: "text-red-600",
-  Eradication: "text-fuchsia-700",
-  Unknown: "text-slate-400",
+  Low: "text-[#38d39f]",
+  Medium: "text-[#60a5fa]",
+  High: "text-[#ffaa5f]",
+  Extreme: "text-[#f43f5e]",
+  Eradication: "text-[#d946ef]",
+  Unknown: "text-slate-500",
 };
 
 export const STATUSES = ["captured", "under_attack", "lost"];
 export const STATUS_META = {
-  captured: { label: "Captured", dot: "bg-emerald-500", badge: "border-emerald-200 bg-emerald-50 text-emerald-700", color: "#10b981" },
-  under_attack: { label: "Under Attack", dot: "bg-amber-500", badge: "border-amber-200 bg-amber-50 text-amber-700", color: "#f59e0b" },
-  lost: { label: "Lost", dot: "bg-rose-500", badge: "border-rose-200 bg-rose-50 text-rose-700", color: "#f43f5e" },
-  unclaimed: { label: "Unclaimed", dot: "bg-slate-300", badge: "border-slate-200 bg-slate-50 text-slate-500", color: "#cbd5e1" },
+  captured: { label: "Captured", dot: "bg-[#38d39f]", badge: "border-[#38d39f]/30 bg-[#38d39f]/10 text-[#38d39f]", color: "#38d39f" },
+  under_attack: { label: "Under Attack", dot: "bg-[#ffaa5f] pulse-dot", badge: "border-[#ffaa5f]/30 bg-[#ffaa5f]/10 text-[#ffaa5f]", color: "#ffaa5f" },
+  lost: { label: "Lost", dot: "bg-[#e55858]", badge: "border-[#e55858]/30 bg-[#e55858]/10 text-[#e55858]", color: "#e55858" },
+  unclaimed: { label: "Unclaimed", dot: "bg-slate-600", badge: "border-slate-600/40 bg-slate-600/10 text-slate-400", color: "#475569" },
 };
