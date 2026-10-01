@@ -9,10 +9,12 @@ export default function Header({
   onImport,
   importing,
   folderLinked,
+  folderName,
   folderSyncing,
   folderSupported,
   onLinkFolder,
   onSyncFolder,
+  onChangeFolder,
   onUnlinkFolder,
 }) {
   const [folderMenuOpen, setFolderMenuOpen] = useState(false);
@@ -69,16 +71,19 @@ export default function Header({
                 disabled={folderSyncing}
                 data-testid="folder-menu-btn"
                 className="btn-ghost inline-flex h-9 items-center gap-2 px-3 text-[12px] disabled:opacity-70"
+                title={`Linked folder: ${folderName || "Mindustry data folder"}`}
               >
                 {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4 text-[#38d39f]" />}
-                <span className="hidden lg:inline text-[#38d39f]">Linked</span>
+                <span className="max-w-[110px] truncate text-[#38d39f]" data-testid="linked-folder-name">
+                  {folderName || "Linked"}
+                </span>
                 <ChevronDown className="h-3 w-3" />
               </button>
               {folderMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setFolderMenuOpen(false)} />
                   <div
-                    className="absolute right-0 top-full z-50 mt-1 w-48 rounded-[3px] border border-[#343845] bg-[#1a1b20] py-1 shadow-xl"
+                    className="absolute right-0 top-full z-50 mt-1 w-52 rounded-[3px] border border-[#343845] bg-[#1a1b20] py-1 shadow-xl"
                     data-testid="folder-menu"
                   >
                     <button
@@ -87,6 +92,13 @@ export default function Header({
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] text-[#cbd5e1] transition-colors hover:bg-[#22242c] hover:text-[#ffd37f]"
                     >
                       <RefreshCw className="h-3.5 w-3.5" /> Sync now
+                    </button>
+                    <button
+                      onClick={() => { setFolderMenuOpen(false); onChangeFolder(); }}
+                      data-testid="change-folder-btn"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] text-[#cbd5e1] transition-colors hover:bg-[#22242c] hover:text-[#ffd37f]"
+                    >
+                      <FolderLink className="h-3.5 w-3.5" /> Change folder
                     </button>
                     <button
                       onClick={() => { setFolderMenuOpen(false); onUnlinkFolder(); }}
@@ -99,6 +111,12 @@ export default function Header({
                 </>
               )}
             </div>
+          )}
+
+          {!folderSupported && (
+            <span className="hidden xl:inline text-[11px] text-slate-400" title="Folder sync requires a supported Chromium browser and may be blocked in embedded pages.">
+              Folder sync unavailable
+            </span>
           )}
 
           <button

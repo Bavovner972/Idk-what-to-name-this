@@ -9,11 +9,19 @@ import PlanetTab from "./components/tracker/PlanetTab";
 import AnalyticsTab from "./components/tracker/AnalyticsTab";
 import DataTab from "./components/tracker/DataTab";
 import EditSectorDialog from "./components/tracker/EditSectorDialog";
+import FolderGuidanceDialog from "./components/tracker/FolderGuidanceDialog";
 import EmptyState from "./components/tracker/EmptyState";
 import MobileNav, { TABS } from "./components/tracker/MobileNav";
 import { fetchSectors, fetchPlanets, importSectors, updateSector, deleteSector } from "./lib/api";
 import { loadSettingsFromFile, extractSectors } from "./lib/mindustryParser";
-import { isFileSystemAccessSupported, pickFolder, loadHandle, clearHandle, readFromFolder } from "./lib/gameFolder";
+import {
+  isFileSystemAccessSupported,
+  pickFolder,
+  loadHandle,
+  clearHandle,
+  readFromFolder,
+  validateAndSaveHandle,
+} from "./lib/gameFolder";
 import { DIFF_RANK } from "./lib/presets";
 
 const STATUS_RANK = { under_attack: 0, captured: 1, lost: 2 };
@@ -43,7 +51,9 @@ function App() {
   const [tab, setTab] = useState("sectors");
   const [editing, setEditing] = useState(null);
   const [folderLinked, setFolderLinked] = useState(false);
+  const [folderName, setFolderName] = useState("");
   const [folderSyncing, setFolderSyncing] = useState(false);
+  const [folderGuideOpen, setFolderGuideOpen] = useState(false);
   const folderHandleRef = useRef(null);
   const fileRef = useRef(null);
 
@@ -75,8 +85,13 @@ function App() {
         if (handle) {
           folderHandleRef.current = handle;
           setFolderLinked(true);
+          setFolderName(handle.name || "");
         }
-      } catch {}
+      } catch (error) {
+        toast.error("Could not restore linked folder", {
+          description: error.message || "Browser storage could not be accessed",
+        });
+      }
     })();
   }, []);
 
@@ -166,13 +181,13 @@ function App() {
 
   const openImport = () => fileRef.current?.click();
 
-  const syncFromFolder = useCallback(async () => {
-    const handle = folderHandleRef.current;
+  const syncFromFolder = useCallback(async (handleOverride = null, dataOverride = null) => {
+    const handle = handleOverride || folderHandleRef.current;
     if (!handle) return;
     setFolderSyncing(true);
     const t = toast.loading("Syncing from Mindustry folder...");
     try {
-      const { values, saves, remaps } = await readFromFolder(handle);
+      const { values, saves, remaps } = dataOverride || await readFromFolder(handle);
       const { planets: found, errors, skipped } = extractSectors(values, saves, remaps);
       for (const p of Object.keys(found)) {
         found[p] = owned(found[p]);
@@ -197,7 +212,15 @@ function App() {
       else setPlanet(next);
     } catch (err) {
       if (err.name === "NotAllowedError") {
-        toast.error("Permission denied", { id: t, description: "Click Sync again to re-grant folder access" });
+        toast.error("Folder permission denied", {
+          id: t,
+          description: "Allow read access when prompted, or change the linked folder. Browser site settings may also revoke access.",
+        });
+      } else if (err.name === "SecurityError") {
+        toast.error("Folder access blocked", {
+          id: t,
+          description: "The browser or page policy blocked folder access. Open this tracker in a supported browser and, if embedded, in a new tab.",
+        });
       } else {
         toast.error("Sync failed", { id: t, description: err.message });
       }
@@ -206,22 +229,40 @@ function App() {
     }
   }, [planet, load]);
 
+  const openFolderGuide = useCallback(() => setFolderGuideOpen(true), []);
+
   const linkFolder = useCallback(async () => {
     if (!isFileSystemAccessSupported()) {
-      toast.error("Not supported", { description: "Folder linking requires Chrome, Edge, or another Chromium browser" });
+      toast.error("Folder sync is not supported", {
+        description: "Use a supported Chromium browser on a secure top-level page. Embedded pages may block the folder picker.",
+      });
       return;
     }
+    setFolderGuideOpen(false);
     setFolderSyncing(true);
-    const t = toast.loading("Pick your Mindustry data folder...");
+    const t = toast.loading("Choose your Mindustry data folder...");
     try {
       const handle = await pickFolder();
+      const data = await validateAndSaveHandle(handle);
       folderHandleRef.current = handle;
       setFolderLinked(true);
+      setFolderName(handle.name);
       toast.success("Folder linked", { id: t, description: handle.name });
-      await syncFromFolder();
+      await syncFromFolder(handle, data);
     } catch (err) {
       if (err.name !== "AbortError") {
-        toast.error("Could not link folder", { id: t, description: err.message });
+        const isStorageError = err.message?.startsWith("Could not save the folder link");
+        const isInvalidFolder = err.message?.includes("No settings.bin found");
+        const isSecurityError = err.name === "SecurityError";
+        toast.error(
+          isStorageError ? "Could not save folder link" : isInvalidFolder ? "Invalid Mindustry folder" : isSecurityError ? "Folder picker blocked" : "Could not link folder",
+          {
+            id: t,
+            description: isSecurityError
+              ? "The browser or page policy blocked the picker. Open this tracker in a supported Chromium browser and, if embedded, in a new tab."
+              : err.message,
+          }
+        );
       } else {
         toast.dismiss(t);
       }
@@ -231,10 +272,15 @@ function App() {
   }, [syncFromFolder]);
 
   const unlinkFolder = useCallback(async () => {
-    folderHandleRef.current = null;
-    setFolderLinked(false);
-    await clearHandle();
-    toast.success("Folder unlinked");
+    try {
+      await clearHandle();
+      folderHandleRef.current = null;
+      setFolderLinked(false);
+      setFolderName("");
+      toast.success("Folder unlinked");
+    } catch (error) {
+      toast.error("Could not unlink folder", { description: error.message || "Browser storage could not be updated" });
+    }
   }, []);
 
   return (
@@ -246,10 +292,12 @@ function App() {
         onImport={openImport}
         importing={importing}
         folderLinked={folderLinked}
+        folderName={folderName}
         folderSyncing={folderSyncing}
         folderSupported={isFileSystemAccessSupported()}
-        onLinkFolder={linkFolder}
+        onLinkFolder={openFolderGuide}
         onSyncFolder={syncFromFolder}
+        onChangeFolder={openFolderGuide}
         onUnlinkFolder={unlinkFolder}
       />
       <input
@@ -298,7 +346,10 @@ function App() {
               importing={importing}
               folderSupported={isFileSystemAccessSupported()}
               folderLinked={folderLinked}
-              onLinkFolder={linkFolder}
+              folderName={folderName}
+              onLinkFolder={openFolderGuide}
+              onSyncFolder={syncFromFolder}
+              onUnlinkFolder={unlinkFolder}
               folderSyncing={folderSyncing}
             />
           ) : tab === "sectors" ? (
@@ -319,6 +370,12 @@ function App() {
         onClose={() => setEditing(null)}
         onSave={onSave}
         onDelete={onDelete}
+      />
+      <FolderGuidanceDialog
+        open={folderGuideOpen}
+        onOpenChange={setFolderGuideOpen}
+        onChoose={linkFolder}
+        folderSyncing={folderSyncing}
       />
       <Toaster position="top-right" richColors />
     </div>

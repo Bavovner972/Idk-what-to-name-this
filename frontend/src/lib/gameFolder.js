@@ -10,15 +10,20 @@ const KEY = "mindustry_dir";
 
 function openDB() {
   return new Promise((resolve, reject) => {
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("IndexedDB is unavailable in this browser or browsing context"));
+      return;
+    }
     const req = indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(req.error || new Error("Could not open IndexedDB"));
+    req.onblocked = () => reject(new Error("IndexedDB is blocked by another open tab"));
   });
 }
 
 export function isFileSystemAccessSupported() {
-  return typeof window !== "undefined" && "showDirectoryPicker" in window;
+  return typeof window !== "undefined" && typeof indexedDB !== "undefined" && "showDirectoryPicker" in window;
 }
 
 export async function saveHandle(handle) {
@@ -27,7 +32,8 @@ export async function saveHandle(handle) {
     const tx = db.transaction(STORE, "readwrite");
     tx.objectStore(STORE).put(handle, KEY);
     tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
+    tx.onerror = () => reject(tx.error || new Error("Could not save the folder handle"));
+    tx.onabort = () => reject(tx.error || new Error("Saving the folder handle was aborted"));
   });
 }
 
@@ -37,7 +43,8 @@ export async function loadHandle() {
     const tx = db.transaction(STORE, "readonly");
     const req = tx.objectStore(STORE).get(KEY);
     req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(req.error || new Error("Could not restore the folder handle"));
+    tx.onabort = () => reject(tx.error || new Error("Restoring the folder handle was aborted"));
   });
 }
 
@@ -47,11 +54,13 @@ export async function clearHandle() {
     const tx = db.transaction(STORE, "readwrite");
     tx.objectStore(STORE).delete(KEY);
     tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
+    tx.onerror = () => reject(tx.error || new Error("Could not remove the folder handle"));
+    tx.onabort = () => reject(tx.error || new Error("Removing the folder handle was aborted"));
   });
 }
 
-// Chromium: permission must be re-granted on each session. Returns true if we can use the handle.
+// Permission is queried without prompting on restore. A request only happens during an
+// explicit user action such as Sync or choosing a folder.
 async function ensurePermission(handle) {
   const opts = { mode: "read" };
   if ((await handle.queryPermission(opts)) === "granted") return true;
@@ -60,9 +69,19 @@ async function ensurePermission(handle) {
 }
 
 export async function pickFolder() {
-  const handle = await window.showDirectoryPicker({ mode: "read" });
-  await saveHandle(handle);
-  return handle;
+  return window.showDirectoryPicker({ mode: "read" });
+}
+
+// Validate a newly picked folder before replacing the saved handle. If either reading
+// the folder or persisting it fails, the previously linked folder remains untouched.
+export async function validateAndSaveHandle(handle) {
+  const data = await readFromFolder(handle);
+  try {
+    await saveHandle(handle);
+  } catch (error) {
+    throw new Error(`Could not save the folder link in browser storage: ${error.message || "IndexedDB is unavailable"}`);
+  }
+  return data;
 }
 
 // Reads the first file in `dir` whose name matches `pattern` (case-insensitive).
@@ -150,8 +169,18 @@ async function findSectorSavesFromFolder(saveFiles) {
 
 // Reads settings.bin + saves/ from the linked folder and returns the same shape as loadSettingsFromFile.
 export async function readFromFolder(handle) {
-  const granted = await ensurePermission(handle);
-  if (!granted) throw new Error("Permission denied for linked folder");
+  let granted;
+  try {
+    granted = await ensurePermission(handle);
+  } catch (error) {
+    if (error.name === "NotAllowedError" || error.name === "SecurityError") throw error;
+    throw new Error(`Could not check folder permission: ${error.message || "browser permission check failed"}`);
+  }
+  if (!granted) {
+    const error = new Error("Folder access was denied. Use Sync and allow read access, or change the linked folder.");
+    error.name = "NotAllowedError";
+    throw error;
+  }
 
   const settingsFile = await findFile(handle, /^settings\.bin$/i);
   if (!settingsFile) throw new Error("No settings.bin found in the linked folder. Make sure you selected your Mindustry data directory.");

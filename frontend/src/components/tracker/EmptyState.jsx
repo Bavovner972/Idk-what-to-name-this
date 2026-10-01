@@ -1,7 +1,18 @@
 import React from "react";
 import { Upload, FolderArchive, FileCog, Loader2, FolderLink } from "lucide-react";
 
-export default function EmptyState({ onImport, planet, importing, folderSupported, folderLinked, onLinkFolder, folderSyncing }) {
+export default function EmptyState({
+  onImport,
+  planet,
+  importing,
+  folderSupported,
+  folderLinked,
+  folderName,
+  onLinkFolder,
+  onSyncFolder,
+  onUnlinkFolder,
+  folderSyncing,
+}) {
   return (
     <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center" data-testid="empty-state">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
@@ -12,27 +23,70 @@ export default function EmptyState({ onImport, planet, importing, folderSupporte
         Import your campaign to track every sector — named presets and numbered sectors alike.
       </p>
 
-      {folderSupported && (
+      {folderSupported ? (
         <div className="mx-auto mt-6 max-w-md rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-left">
           <div className="flex items-start gap-3">
             <FolderLink className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
             <div className="flex-1">
-              <p className="text-[13px] font-semibold text-emerald-800">Link your Mindustry folder</p>
-              <p className="mt-0.5 text-[12.5px] text-emerald-700">
-                Skip the manual export. Link your game data folder once and sync with one click anytime.
-              </p>
-              <button
-                onClick={onLinkFolder}
-                disabled={folderSyncing}
-                data-testid="empty-link-folder-btn"
-                className="mt-3 inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-4 text-[12.5px] font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-70"
-              >
-                {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4" />}
-                Link Mindustry Folder
-              </button>
+              {folderLinked ? (
+                <>
+                  <p className="text-[13px] font-semibold text-emerald-800">Mindustry folder linked</p>
+                  <p className="mt-0.5 break-all text-[12.5px] text-emerald-700" data-testid="empty-linked-folder-name">
+                    {folderName || "Saved folder"}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={onSyncFolder}
+                      disabled={folderSyncing}
+                      data-testid="empty-sync-folder-btn"
+                      className="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-4 text-[12.5px] font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-70"
+                    >
+                      {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4" />}
+                      Sync folder
+                    </button>
+                    <button
+                      onClick={onLinkFolder}
+                      disabled={folderSyncing}
+                      data-testid="empty-change-folder-btn"
+                      className="h-9 rounded-md border border-emerald-300 px-3 text-[12.5px] font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-70"
+                    >
+                      Change folder
+                    </button>
+                    <button
+                      onClick={onUnlinkFolder}
+                      disabled={folderSyncing}
+                      data-testid="empty-unlink-folder-btn"
+                      className="h-9 rounded-md px-3 text-[12.5px] font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-70"
+                    >
+                      Unlink
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-[13px] font-semibold text-emerald-800">Link your Mindustry folder</p>
+                  <p className="mt-0.5 text-[12.5px] text-emerald-700">
+                    Skip the manual export. Link your game data folder once and sync with one click anytime.
+                  </p>
+                  <button
+                    onClick={onLinkFolder}
+                    disabled={folderSyncing}
+                    data-testid="empty-link-folder-btn"
+                    className="mt-3 inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-4 text-[12.5px] font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-70"
+                  >
+                    {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4" />}
+                    Link Mindustry Folder
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
+      ) : (
+        <p className="mx-auto mt-6 max-w-md text-[12.5px] text-slate-500">
+          Folder sync needs a supported Chromium browser and a secure top-level page. Embedded iframe pages may block
+          folder access; open this tracker in a new tab. You can still import a save below.
+        </p>
       )}
 
       <div className="mx-auto mt-6 max-w-md">
