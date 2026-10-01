@@ -13,6 +13,7 @@ import EmptyState from "./components/tracker/EmptyState";
 import MobileNav, { TABS } from "./components/tracker/MobileNav";
 import { fetchSectors, fetchPlanets, importSectors, updateSector, deleteSector } from "./lib/api";
 import { loadSettingsFromFile, extractSectors } from "./lib/mindustryParser";
+import { isFileSystemAccessSupported, pickFolder, loadHandle, clearHandle, readFromFolder } from "./lib/gameFolder";
 import { DIFF_RANK } from "./lib/presets";
 
 const STATUS_RANK = { under_attack: 0, captured: 1, lost: 2 };
@@ -41,6 +42,9 @@ function App() {
   const [importing, setImporting] = useState(false);
   const [tab, setTab] = useState("sectors");
   const [editing, setEditing] = useState(null);
+  const [folderLinked, setFolderLinked] = useState(false);
+  const [folderSyncing, setFolderSyncing] = useState(false);
+  const folderHandleRef = useRef(null);
   const fileRef = useRef(null);
 
   const load = useCallback(async (p) => {
@@ -61,6 +65,20 @@ function App() {
     localStorage.setItem("sc_planet", planet);
     load(planet);
   }, [planet, load]);
+
+  // On mount: check if a folder handle was previously saved in IndexedDB
+  useEffect(() => {
+    if (!isFileSystemAccessSupported()) return;
+    (async () => {
+      try {
+        const handle = await loadHandle();
+        if (handle) {
+          folderHandleRef.current = handle;
+          setFolderLinked(true);
+        }
+      } catch {}
+    })();
+  }, []);
 
   const onFile = async (e) => {
     const file = e.target.files?.[0];
@@ -148,6 +166,77 @@ function App() {
 
   const openImport = () => fileRef.current?.click();
 
+  const syncFromFolder = useCallback(async () => {
+    const handle = folderHandleRef.current;
+    if (!handle) return;
+    setFolderSyncing(true);
+    const t = toast.loading("Syncing from Mindustry folder...");
+    try {
+      const { values, saves, remaps } = await readFromFolder(handle);
+      const { planets: found, errors, skipped } = extractSectors(values, saves, remaps);
+      for (const p of Object.keys(found)) {
+        found[p] = owned(found[p]);
+        if (!found[p].length) delete found[p];
+      }
+      const names = Object.keys(found);
+      if (!names.length) throw new Error("No captured sectors found in settings.bin");
+      const summary = [];
+      for (const p of names) {
+        const res = await importSectors(p, found[p]);
+        const numbered = found[p].filter((s) => s.numbered).length;
+        summary.push(`${p}: ${res.total} sectors (${numbered} numbered)`);
+      }
+      toast.success("Folder synced", {
+        id: t,
+        description: summary.join(" | ") + (saves ? "" : " — no saves/ folder found, sector statuses may be less accurate"),
+      });
+      if (skipped.length) console.info("Ignored leftover sector data", skipped);
+      if (errors.length) console.warn("Sector parse warnings", errors);
+      const next = found[planet] ? planet : names.includes("serpulo") ? "serpulo" : names[0];
+      if (next === planet) load(planet);
+      else setPlanet(next);
+    } catch (err) {
+      if (err.name === "NotAllowedError") {
+        toast.error("Permission denied", { id: t, description: "Click Sync again to re-grant folder access" });
+      } else {
+        toast.error("Sync failed", { id: t, description: err.message });
+      }
+    } finally {
+      setFolderSyncing(false);
+    }
+  }, [planet, load]);
+
+  const linkFolder = useCallback(async () => {
+    if (!isFileSystemAccessSupported()) {
+      toast.error("Not supported", { description: "Folder linking requires Chrome, Edge, or another Chromium browser" });
+      return;
+    }
+    setFolderSyncing(true);
+    const t = toast.loading("Pick your Mindustry data folder...");
+    try {
+      const handle = await pickFolder();
+      folderHandleRef.current = handle;
+      setFolderLinked(true);
+      toast.success("Folder linked", { id: t, description: handle.name });
+      await syncFromFolder();
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        toast.error("Could not link folder", { id: t, description: err.message });
+      } else {
+        toast.dismiss(t);
+      }
+    } finally {
+      setFolderSyncing(false);
+    }
+  }, [syncFromFolder]);
+
+  const unlinkFolder = useCallback(async () => {
+    folderHandleRef.current = null;
+    setFolderLinked(false);
+    await clearHandle();
+    toast.success("Folder unlinked");
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#f8f9fb] text-slate-900 pb-20 md:pb-10">
       <Header
@@ -156,6 +245,12 @@ function App() {
         onPlanet={setPlanet}
         onImport={openImport}
         importing={importing}
+        folderLinked={folderLinked}
+        folderSyncing={folderSyncing}
+        folderSupported={isFileSystemAccessSupported()}
+        onLinkFolder={linkFolder}
+        onSyncFolder={syncFromFolder}
+        onUnlinkFolder={unlinkFolder}
       />
       <input
         ref={fileRef}
@@ -197,7 +292,15 @@ function App() {
               ))}
             </div>
           ) : sectors.length === 0 ? (
-            <EmptyState onImport={openImport} planet={planet} importing={importing} />
+            <EmptyState
+              onImport={openImport}
+              planet={planet}
+              importing={importing}
+              folderSupported={isFileSystemAccessSupported()}
+              folderLinked={folderLinked}
+              onLinkFolder={linkFolder}
+              folderSyncing={folderSyncing}
+            />
           ) : tab === "sectors" ? (
             <SectorsTab sectors={sectors} onOpen={setEditing} />
           ) : tab === "planet" ? (
