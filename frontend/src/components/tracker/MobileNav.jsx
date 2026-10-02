@@ -10,7 +10,7 @@ export const TABS = [
 
 export default function MobileNav({ tab, onTab }) {
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[#343845] bg-[#121317]/95 backdrop-blur">
       <div className="grid grid-cols-4">
         {TABS.map((t) => {
           const Icon = t.icon;
@@ -21,7 +21,7 @@ export default function MobileNav({ tab, onTab }) {
               data-testid={`mobile-tab-${t.id}`}
               onClick={() => onTab(t.id)}
               className={`flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors ${
-                active ? "text-indigo-600" : "text-slate-500"
+                active ? "text-[#ffd37f]" : "text-[#64748b]"
               }`}
             >
               <Icon className="h-5 w-5" />

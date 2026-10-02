@@ -46,7 +46,7 @@ export default function EditSectorDialog({ sector, onClose, onSave, onDelete }) 
 
   return (
     <Dialog open={!!sector} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[500px] rounded-xl" data-testid="edit-sector-dialog">
+      <DialogContent className="sm:max-w-[500px] rounded-[4px] border-[#343845] bg-[#1a1b20] text-[#e2e8f0]" data-testid="edit-sector-dialog">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold tracking-tightish">{sector.name}</DialogTitle>
           <DialogDescription className="font-mono-ui text-[11px] uppercase tracking-wider text-slate-400">
@@ -105,8 +105,8 @@ export default function EditSectorDialog({ sector, onClose, onSave, onDelete }) 
               <Label className="text-[13px]">Core storage</Label>
               <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
                 {Object.entries(sector.items).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-                  <span key={k} className="rounded-md bg-slate-100 px-2 py-0.5 text-[11.5px] text-slate-600">
-                    {k} <b className="text-slate-800">{Math.round(v).toLocaleString()}</b>
+                  <span key={k} className="border border-[#343845] bg-[#15161a] px-2 py-0.5 font-mono-ui text-[11px] text-[#94a3b8]">
+                    {k} <b className="text-[#e2e8f0]">{Math.round(v).toLocaleString()}</b>
                   </span>
                 ))}
               </div>
@@ -114,10 +114,10 @@ export default function EditSectorDialog({ sector, onClose, onSave, onDelete }) 
           )}
 
           <div className="grid grid-cols-2 gap-3 pt-1">
-            <button type="button" onClick={onClose} data-testid="edit-cancel" className="h-9 rounded-md border border-slate-300 bg-white text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50">
+            <button type="button" onClick={onClose} data-testid="edit-cancel" className="btn-ghost h-9 px-3 text-[11px]">
               Cancel
             </button>
-            <button type="submit" data-testid="edit-save" className="h-9 rounded-md bg-indigo-600 text-sm font-medium text-white transition-colors hover:bg-indigo-700">
+            <button type="submit" data-testid="edit-save" className="btn-primary h-9 px-3 text-[11px]">
               Save
             </button>
           </div>

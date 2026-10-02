@@ -284,7 +284,7 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb] text-slate-900 pb-20 md:pb-10">
+    <div className="tracker-shell min-h-screen pb-20 md:pb-10">
       <Header
         planet={planet}
         planets={planets}
@@ -311,7 +311,7 @@ function App() {
       <main className="mx-auto max-w-[1920px] px-4 sm:px-6 xl:px-10 2xl:px-14">
         <StatCards stats={stats} />
 
-        <div className="mt-6 hidden md:flex border-b border-slate-200" role="tablist">
+        <div className="mt-6 hidden border-b border-[#343845] md:flex" role="tablist">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -319,12 +319,12 @@ function App() {
               data-testid={`tab-${t.id}`}
               onClick={() => setTab(t.id)}
               className={`relative px-4 py-2.5 text-[15px] font-medium transition-colors ${
-                tab === t.id ? "text-indigo-600" : "text-slate-500 hover:text-slate-800"
+                tab === t.id ? "text-[#ffd37f]" : "text-[#64748b] hover:text-[#cbd5e1]"
               }`}
             >
               {t.label}
               <span
-                className={`absolute left-0 right-0 -bottom-px h-0.5 rounded-full bg-indigo-600 transition-opacity ${
+                className={`absolute left-0 right-0 -bottom-px h-0.5 rounded-full bg-[#ffd37f] transition-opacity ${
                   tab === t.id ? "opacity-100" : "opacity-0"
                 }`}
               />
@@ -336,7 +336,7 @@ function App() {
           {loading ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="h-32 rounded-lg border border-slate-200 bg-white animate-pulse" />
+                <div key={i} className="panel panel-ticks h-32 animate-pulse" />
               ))}
             </div>
           ) : sectors.length === 0 ? (
@@ -377,7 +377,7 @@ function App() {
         onChoose={linkFolder}
         folderSyncing={folderSyncing}
       />
-      <Toaster position="top-right" richColors />
+      <Toaster theme="dark" position="top-right" richColors />
     </div>
   );
 }

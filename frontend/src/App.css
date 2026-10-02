@@ -24,6 +24,15 @@ body {
   color: var(--m-text);
 }
 
+.tracker-shell {
+  min-height: 100vh;
+  color: var(--m-text);
+  color-scheme: dark;
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(255, 211, 127, 0.055), transparent 48%),
+    var(--m-bg);
+}
+
 .font-mono-ui,
 .font-heading {
   font-family: "JetBrains Mono", monospace;

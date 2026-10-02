@@ -10,7 +10,7 @@ const PATHS = [
 export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, folderSyncing }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[540px]" data-testid="folder-guidance-dialog">
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[4px] border-[#343845] bg-[#1a1b20] text-[#e2e8f0] sm:max-w-[540px]" data-testid="folder-guidance-dialog">
         <DialogHeader>
           <DialogTitle>Choose your Mindustry data folder</DialogTitle>
           <DialogDescription>
@@ -18,19 +18,19 @@ export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, fol
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 text-sm text-slate-600">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-950">
+        <div className="space-y-4 text-sm text-[#cbd5e1]">
+          <div className="border border-[#ffd37f]/30 bg-[#ffd37f]/[0.07] p-3 text-[#f4ddb1]">
             Select the data folder that contains <b>settings.bin</b> and (usually) a <b>saves</b> folder.
             Do not select the saves folder by itself.
           </div>
 
           <div>
-            <p className="mb-2 font-semibold text-slate-800">Common desktop locations</p>
+            <p className="label-ui mb-2 !text-[#ffd37f]">Common desktop locations</p>
             <ul className="space-y-1.5">
               {PATHS.map(([os, path]) => (
                 <li key={os} className="flex flex-wrap gap-x-2">
                   <span className="w-14 font-medium">{os}</span>
-                  <code className="break-all rounded bg-slate-100 px-1.5 py-0.5 text-[12px]">{path}</code>
+                  <code className="break-all border border-[#343845] bg-[#15161a] px-1.5 py-0.5 font-mono-ui text-[11px] text-[#e2e8f0]">{path}</code>
                 </li>
               ))}
             </ul>
@@ -41,7 +41,7 @@ export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, fol
             <b>Ctrl+L</b> on Windows/Linux or <b>Cmd+Shift+G</b> on macOS where available). This is a system
             picker; this website cannot browse your computer by typing a path.
           </p>
-          <p className="text-[12.5px] text-slate-500">
+          <p className="text-[12.5px] text-[#94a3b8]">
             Folder access requires a supported Chromium browser and a secure, top-level page. If this page is
             embedded in an iframe, open it in a new tab; browser or site policy may block the folder picker there.
             Other browsers can still use Import Save.
@@ -52,7 +52,7 @@ export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, fol
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="btn-ghost h-9 px-4 text-[11px]"
           >
             Cancel
           </button>
@@ -61,7 +61,7 @@ export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, fol
             onClick={onChoose}
             disabled={folderSyncing}
             data-testid="choose-folder-btn"
-            className="h-9 rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-70"
+            className="btn-primary h-9 px-4 text-[11px] disabled:opacity-70"
           >
             {folderSyncing ? "Working…" : "Open folder picker"}
           </button>
