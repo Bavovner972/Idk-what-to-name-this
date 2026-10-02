@@ -1,5 +1,5 @@
 import React from "react";
-import { Upload, FolderArchive, FileCog, Loader2, FolderLink } from "lucide-react";
+import { Upload, FolderArchive, FileCog, Loader2, FolderSync } from "lucide-react";
 
 export default function EmptyState({
   onImport,
@@ -26,7 +26,7 @@ export default function EmptyState({
       {folderSupported ? (
         <div className="mx-auto mt-6 max-w-md rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-left">
           <div className="flex items-start gap-3">
-            <FolderLink className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+            <FolderSync className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
             <div className="flex-1">
               {folderLinked ? (
                 <>
@@ -41,7 +41,7 @@ export default function EmptyState({
                       data-testid="empty-sync-folder-btn"
                       className="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-4 text-[12.5px] font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-70"
                     >
-                      {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4" />}
+                      {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderSync className="h-4 w-4" />}
                       Sync folder
                     </button>
                     <button
@@ -74,7 +74,7 @@ export default function EmptyState({
                     data-testid="empty-link-folder-btn"
                     className="mt-3 inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-4 text-[12.5px] font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-70"
                   >
-                    {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4" />}
+                    {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderSync className="h-4 w-4" />}
                     Link Mindustry Folder
                   </button>
                 </>

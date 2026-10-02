@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Hexagon, Upload, Loader2, FolderLink, RefreshCw, Unlink, ChevronDown } from "lucide-react";
+import { Hexagon, Upload, Loader2, FolderSync, RefreshCw, Unlink, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 
 export default function Header({
@@ -59,7 +59,7 @@ export default function Header({
               className="btn-ghost inline-flex h-9 items-center gap-2 px-3 text-[12px] disabled:opacity-70"
               title="Link your Mindustry data folder for one-click syncing"
             >
-              {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4" />}
+              {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderSync className="h-4 w-4" />}
               <span className="hidden lg:inline">Link Folder</span>
             </button>
           )}
@@ -73,7 +73,7 @@ export default function Header({
                 className="btn-ghost inline-flex h-9 items-center gap-2 px-3 text-[12px] disabled:opacity-70"
                 title={`Linked folder: ${folderName || "Mindustry data folder"}`}
               >
-                {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderLink className="h-4 w-4 text-[#38d39f]" />}
+                {folderSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderSync className="h-4 w-4 text-[#38d39f]" />}
                 <span className="max-w-[110px] truncate text-[#38d39f]" data-testid="linked-folder-name">
                   {folderName || "Linked"}
                 </span>
@@ -98,7 +98,7 @@ export default function Header({
                       data-testid="change-folder-btn"
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12.5px] text-[#cbd5e1] transition-colors hover:bg-[#22242c] hover:text-[#ffd37f]"
                     >
-                      <FolderLink className="h-3.5 w-3.5" /> Change folder
+                      <FolderSync className="h-3.5 w-3.5" /> Change folder
                     </button>
                     <button
                       onClick={() => { setFolderMenuOpen(false); onUnlinkFolder(); }}
