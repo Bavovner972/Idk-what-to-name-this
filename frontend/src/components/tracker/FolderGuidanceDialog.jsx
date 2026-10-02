@@ -8,6 +8,9 @@ const PATHS = [
 ];
 
 export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, folderSyncing }) {
+  const isEmbedded = typeof window !== "undefined" && window.self !== window.top;
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "/";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[4px] border-[#343845] bg-[#1a1b20] text-[#e2e8f0] sm:max-w-[540px]" data-testid="folder-guidance-dialog">
@@ -23,6 +26,23 @@ export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, fol
             Select the data folder that contains <b>settings.bin</b> and (usually) a <b>saves</b> folder.
             Do not select the saves folder by itself.
           </div>
+
+          {isEmbedded && (
+            <div
+              role="note"
+              className="border border-rose-400/30 bg-rose-950/30 p-3 text-[#fecaca]"
+              data-testid="folder-embedded-warning"
+            >
+              <p className="label-ui !text-[#fca5a5]">Open outside the embedded preview</p>
+              <p className="mt-1 text-[13px]">
+                Replit Preview blocks access to local folders inside this frame. Open the tracker in its own browser
+                tab, then choose Link Mindustry Folder there.
+              </p>
+              <p className="mt-2 text-[12px] text-[#cbd5e1]">
+                If the new tab is blocked, use the open-in-new-tab arrow in the Preview toolbar.
+              </p>
+            </div>
+          )}
 
           <div>
             <p className="label-ui mb-2 !text-[#ffd37f]">Common desktop locations</p>
@@ -41,11 +61,12 @@ export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, fol
             <b>Ctrl+L</b> on Windows/Linux or <b>Cmd+Shift+G</b> on macOS where available). This is a system
             picker; this website cannot browse your computer by typing a path.
           </p>
-          <p className="text-[12.5px] text-[#94a3b8]">
-            Folder access requires a supported Chromium browser and a secure, top-level page. If this page is
-            embedded in an iframe, open it in a new tab; browser or site policy may block the folder picker there.
-            Other browsers can still use Import Save.
-          </p>
+          {!isEmbedded && (
+            <p className="text-[12.5px] text-[#94a3b8]">
+              Folder access requires a supported Chromium browser and a secure, top-level page. Other browsers can
+              still use Import Save.
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-1">
@@ -56,15 +77,27 @@ export default function FolderGuidanceDialog({ open, onOpenChange, onChoose, fol
           >
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={onChoose}
-            disabled={folderSyncing}
-            data-testid="choose-folder-btn"
-            className="btn-primary h-9 px-4 text-[11px] disabled:opacity-70"
-          >
-            {folderSyncing ? "Working…" : "Open folder picker"}
-          </button>
+          {isEmbedded ? (
+            <a
+              href={currentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="open-tracker-new-tab"
+              className="btn-primary inline-flex h-9 items-center px-4 text-[11px]"
+            >
+              Open tracker in new tab
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={onChoose}
+              disabled={folderSyncing}
+              data-testid="choose-folder-btn"
+              className="btn-primary h-9 px-4 text-[11px] disabled:opacity-70"
+            >
+              {folderSyncing ? "Working…" : "Open folder picker"}
+            </button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
